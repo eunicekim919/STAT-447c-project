@@ -1,0 +1,79 @@
+---
+title: "More Practice holy"
+author: "Zelalem Araya (92797935)"
+date: "2024-04-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r moresetup}
+
+suppressPackageStartupMessages(require(rstan))
+suppressPackageStartupMessages(require(dplyr))
+suppressPackageStartupMessages(require(ggplot2))
+suppressPackageStartupMessages(require(magrittr))
+suppressPackageStartupMessages(require(tidybayes))
+suppressPackageStartupMessages(require(ggmap))
+suppressPackageStartupMessages(require(sf))
+suppressPackageStartupMessages(require(sp))
+suppressPackageStartupMessages(require(leaflet))
+suppressPackageStartupMessages(require(geosphere))
+```
+```{r}
+
+crime_data <- read.csv("VanCrimeData2022.csv")
+crime_data <- na.omit(crime_data)
+crime_data$longitude <- crime_data$X
+crime_data$latitude <- crime_data$Y
+crime_data <- crime_data[-c(1000:nrow(crime_data)), ]
+tail(crime_data)
+
+```
+
+```{r}
+
+crime_data_sf <- st_as_sf(crime_data, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
+crime_data_sf <- st_transform(crime_data_sf, crs = 4326) # Convert to WGS84
+
+```
+
+```{r}
+
+# Define the bounding box for Vancouver (example coordinates, adjust accordingly)
+vancouver_bbox <- st_bbox(c(xmin = -123.2240, xmax = -123.0232, ymin = 49.1980, ymax = 49.3160), crs = st_crs(4326))
+
+# Convert the bounding box to an sf polygon
+vancouver_area <- st_as_sfc(vancouver_bbox)
+
+# Define grid size - smaller values result in a finer grid
+cellsize <- 0.01  # Degree units; adjust based on desired resolution
+
+# Create a grid over the area
+vancouver_grid <- st_make_grid(vancouver_area, cellsize = cellsize, square = TRUE)
+
+# Convert the grid to a simple feature collection for easy manipulation
+vancouver_grid_sf <- st_sf(geometry = vancouver_grid)
+
+```
+
+```{r}
+area <- read_sf(dsn = "C:/Users/zelal/OneDrive/Documents/local-area-boundary/local-area-boundary.shp" )
+
+```
+
+```{r}
+library(ggplot2)
+
+ggplot() +
+  geom_sf(data = area)+
+  geom_sf(data = crime_data_sf, aes(color = TYPE)) +
+  ggtitle("Crime in Vancouver")
+
+```
+
+```{stan output.var = "canstangeo"}
+
+```
