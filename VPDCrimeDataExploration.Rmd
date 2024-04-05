@@ -1,5 +1,5 @@
 ---
-title: "More Practice holy"
+title: "VPD Crime Data Exploration"
 author: "Zelalem Araya (92797935)"
 date: "2024-04-05"
 output: pdf_document
@@ -60,7 +60,7 @@ vancouver_grid_sf <- st_sf(geometry = vancouver_grid)
 ```
 
 ```{r}
-area <- read_sf(dsn = "C:/Users/zelal/OneDrive/Documents/local-area-boundary/local-area-boundary.shp" )
+area <- read_sf(dsn = "local-area-boundary/local-area-boundary.shp" )
 
 ```
 
@@ -75,5 +75,5 @@ ggplot() +
 ```
 
 ```{stan output.var = "canstangeo"}
-
+// later lol
 ```
