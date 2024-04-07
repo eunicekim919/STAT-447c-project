@@ -28,7 +28,7 @@ crime_data <- read.csv("VanCrimeData2022.csv")
 crime_data <- na.omit(crime_data)
 crime_data$longitude <- crime_data$X
 crime_data$latitude <- crime_data$Y
-crime_data <- crime_data[-c(1000:nrow(crime_data)), ]
+crime_data <- crime_data[-c(100:nrow(crime_data)), ]
 tail(crime_data)
 
 ```
@@ -75,5 +75,98 @@ ggplot() +
 ```
 
 ```{stan output.var = "canstangeo"}
-// later lol
+data {
+  int<lower=0> N; // Number of observed data points
+  vector[N] y;    // Observed values
+  matrix[N, N] distance_matrix; // Matrix of distances between data points
+}
+
+parameters {
+  real mu; // Mean of the underlying spatial process
+  real<lower=0> nugget; // Nugget effect
+  real<lower=0> range;  // Range parameter for the spatial correlation
+  real<lower=0> sill;   // Sill parameter (total variance)
+}
+
+model {
+  // Priors for the mean and spatial parameters
+  mu ~ normal(0, 1000);
+  nugget ~ inv_gamma(0.1, 0.1);
+  range ~ normal(0, 1000);
+  sill ~ inv_gamma(0.1, 0.1);
+  
+  // Spatial correlation matrix based on the exponential model
+  matrix[N, N] Sigma;
+  for (i in 1:N) {
+    for (j in i:N) { // The matrix is symmetric
+      Sigma[i, j] = sill * exp(-distance_matrix[i, j] / range);
+      if (i == j) {
+        Sigma[i, j] += nugget; // Adding the nugget effect to the diagonal
+      } else {
+        Sigma[j, i] = Sigma[i, j]; // Ensuring the matrix is symmetric
+      }
+    }
+  }
+  
+  // The likelihood of the observed data
+  y ~ multi_normal(rep_vector(mu, N), Sigma);
+}
+
+generated quantities {
+  vector[N] y_pred;
+  matrix[N, N] Sigma_Test;
+  for (i in 1:N) {
+    for (j in i:N) { // The matrix is symmetric
+      Sigma_Test[i, j] = sill * exp(-distance_matrix[i, j] / range);
+      if (i == j) {
+        Sigma_Test[i, j] += nugget; // Adding the nugget effect to the diagonal
+      } else {
+        Sigma_Test[j, i] = Sigma_Test[i, j]; // Ensuring the matrix is symmetric
+      }
+    }
+  }
+  y_pred = multi_normal_rng(rep_vector(0, N), Sigma_Test);
+}
+```
+
+```{r}
+# Extract the coordinates from your sf object
+coords <- st_coordinates(crime_data_sf)
+
+# Calculate the distance matrix
+dist_matrix <- distm(coords, coords, fun = distHaversine)
+
+# distance_matrix is a matrix where each element [i, j] represents the distance
+# between the i-th and j-th points in your dataset, in meters.
+
+```
+
+```{r}
+
+# Assuming you have your distance matrix and crime_data prepared
+stan_data <- list(N = nrow(crime_data),
+                  y = crime_data$MONTH, 
+                  distance_matrix = dist_matrix)
+```
+
+```{r message=FALSE, warning=FALSE, results=FALSE, dependson=knitr::dep_prev()}
+
+fit = sampling(
+  canstangeo,
+  data = stan_data,
+  chains = 1,
+  refresh = 0,
+  iter = 2000
+)
+
+print(fit)
+```
+
+```{r}
+samples <- rstan::extract(fit)
+```
+
+```{r}
+
+
 ```
