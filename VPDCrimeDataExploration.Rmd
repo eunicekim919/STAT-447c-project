@@ -28,14 +28,18 @@ crime_data <- read.csv("VanCrimeData2022.csv")
 crime_data <- na.omit(crime_data)
 crime_data$longitude <- crime_data$X
 crime_data$latitude <- crime_data$Y
-crime_data <- crime_data[-c(100:nrow(crime_data)), ]
+crime_data_all <- crime_data[c(1:200),]
+crime_data_huh <- crime_data[c(101:200),]
+crime_data <- crime_data[-c(101:nrow(crime_data)), ]
+crime_data$BINMONTH <- as.numeric(crime_data$MONTH > 6)
 tail(crime_data)
+
 
 ```
 
 ```{r}
 
-crime_data_sf <- st_as_sf(crime_data, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
+crime_data_sf <- st_as_sf(crime_data_all, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
 crime_data_sf <- st_transform(crime_data_sf, crs = 4326) # Convert to WGS84
 
 ```
@@ -69,7 +73,7 @@ library(ggplot2)
 
 ggplot() +
   geom_sf(data = area)+
-  geom_sf(data = crime_data_sf, aes(color = TYPE)) +
+  geom_sf(data = crime_data_sf, aes(color = MONTH)) +
   ggtitle("Crime in Vancouver")
 
 ```
@@ -129,6 +133,63 @@ generated quantities {
 }
 ```
 
+```{stan output.var = canstangeopredict}
+data {
+  int<lower=0> N1; // Number of data points
+  int x1[N1];    // number of outcomes
+  int n1[N1]; //number of observations
+  int<lower=1> N2; // number of new points
+  matrix[N1+N2, N1+N2] distance_matrix; // distances btwn points
+}
+
+transformed data{
+  int<lower=1> N;
+  N = N1 + N2;
+}
+
+parameters {
+  vector[N1] y1; //no clue
+  vector[N2] y2; //no clue
+  real beta; // no clue
+  real sigma_sq;// no clue
+  real phi; //no clue
+}
+
+transformed parameters{
+  vector[N1+N2] mu; //underlying spatial process mean
+  for (i in 1:N) mu[i] = beta;
+}
+
+model {
+  vector[N] y;
+  matrix[N,N] Sigma;
+  matrix [N,N] L;
+  
+  for (i in 1:N1) y[i] = y1[i];
+  for (i in 1:N2) y[N1+i] = y2[i];
+  for (i in 1:(N-1)){
+    for (j in (i+1):N){
+      Sigma[i,j] = exp((-1)*phi*distance_matrix[i,j]);
+      Sigma[j,i] = Sigma[i,j]; //symmetric?
+  }
+}
+
+  for (i in 1:N) Sigma[i,i] = sigma_sq;
+  L = cholesky_decompose(Sigma);
+  sigma_sq ~ normal(0,5);
+  phi ~ normal(0, 5);
+  y ~ multi_normal_cholesky(mu, L);
+  beta ~ normal(0,5);
+  x1 ~ binomial_logit(n1, y1);
+}
+
+generated quantities {
+  vector[N2] y_pred;
+  for (i in 1:N2) y_pred[i] = inv_logit(beta+y2[i]);
+}
+
+```
+
 ```{r}
 # Extract the coordinates from your sf object
 coords <- st_coordinates(crime_data_sf)
@@ -147,7 +208,21 @@ dist_matrix <- distm(coords, coords, fun = distHaversine)
 stan_data <- list(N = nrow(crime_data),
                   y = crime_data$MONTH, 
                   distance_matrix = dist_matrix)
+
+#N1 is the number of data points (length(dfc[,1])) 
+#x1 is the number of outcomes (dfc$x)
+#n1 is the number of observations (dfc$n)
+#N2 is the number of new points (length(fil[,1]))
+#distance_matrix is the distances between all points
+
+stan_data_pred <- list(N1 = nrow(crime_data),
+                       x1 = crime_data$BINMONTH,
+                       n1 = rep(1, 100),
+                       N2 = nrow(crime_data_huh), 
+                       distance_matrix = dist_matrix)
 ```
+
+
 
 ```{r message=FALSE, warning=FALSE, results=FALSE, dependson=knitr::dep_prev()}
 
@@ -167,6 +242,14 @@ samples <- rstan::extract(fit)
 ```
 
 ```{r}
+fit_pred = sampling(
+  canstangeopredict,
+  data = stan_data_pred,
+  chains = 1,
+  refresh = 0,
+  iter = 2000
+)
 
+print(fit_pred)
 
 ```
