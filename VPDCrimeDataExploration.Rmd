@@ -21,14 +21,16 @@ suppressPackageStartupMessages(require(sf))
 suppressPackageStartupMessages(require(sp))
 suppressPackageStartupMessages(require(leaflet))
 suppressPackageStartupMessages(require(geosphere))
+suppressPackageStartupMessages(require(fields))
 ```
+
 ```{r}
 
 crime_data <- read.csv("VanCrimeData2022.csv")
 crime_data <- na.omit(crime_data)
 crime_data$longitude <- crime_data$X
 crime_data$latitude <- crime_data$Y
-crime_data_all <- crime_data[c(1:200),]
+#crime_data_all <- crime_data[c(1:200),]
 crime_data_huh <- crime_data[c(101:200),]
 crime_data <- crime_data[-c(101:nrow(crime_data)), ]
 crime_data$BINMONTH <- as.numeric(crime_data$MONTH > 6)
@@ -39,9 +41,12 @@ tail(crime_data)
 
 ```{r}
 
-crime_data_sf <- st_as_sf(crime_data_all, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
+crime_data_sf <- st_as_sf(crime_data, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
 crime_data_sf <- st_transform(crime_data_sf, crs = 4326) # Convert to WGS84
 
+crime_data_sf_huh <- st_as_sf(crime_data_huh, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
+
+crime_data_sf_huh <- st_transform(crime_data_sf_huh, crs = 4326) # Convert to WGS84
 ```
 
 ```{r}
@@ -116,21 +121,6 @@ model {
   y ~ multi_normal(rep_vector(mu, N), Sigma);
 }
 
-generated quantities {
-  vector[N] y_pred;
-  matrix[N, N] Sigma_Test;
-  for (i in 1:N) {
-    for (j in i:N) { // The matrix is symmetric
-      Sigma_Test[i, j] = sill * exp(-distance_matrix[i, j] / range);
-      if (i == j) {
-        Sigma_Test[i, j] += nugget; // Adding the nugget effect to the diagonal
-      } else {
-        Sigma_Test[j, i] = Sigma_Test[i, j]; // Ensuring the matrix is symmetric
-      }
-    }
-  }
-  y_pred = multi_normal_rng(rep_vector(0, N), Sigma_Test);
-}
 ```
 
 ```{stan output.var = canstangeopredict}
@@ -209,17 +199,6 @@ stan_data <- list(N = nrow(crime_data),
                   y = crime_data$MONTH, 
                   distance_matrix = dist_matrix)
 
-#N1 is the number of data points (length(dfc[,1])) 
-#x1 is the number of outcomes (dfc$x)
-#n1 is the number of observations (dfc$n)
-#N2 is the number of new points (length(fil[,1]))
-#distance_matrix is the distances between all points
-
-stan_data_pred <- list(N1 = nrow(crime_data),
-                       x1 = crime_data$BINMONTH,
-                       n1 = rep(1, 100),
-                       N2 = nrow(crime_data_huh), 
-                       distance_matrix = dist_matrix)
 ```
 
 
@@ -242,14 +221,51 @@ samples <- rstan::extract(fit)
 ```
 
 ```{r}
-fit_pred = sampling(
-  canstangeopredict,
-  data = stan_data_pred,
-  chains = 1,
-  refresh = 0,
-  iter = 2000
-)
 
-print(fit_pred)
+#new locations 
+
+# Example grid points
+#new_locations <- expand.grid(x = seq(min(x_coords), max(x_coords), 
+#                                     length.out = 50),
+#                             y = seq(min(y_coords), max(y_coords), 
+#                                     length.out = 50))
+
+observed_locations <- st_coordinates(crime_data_sf)
+new_locations <- st_coordinates(crime_data_sf_huh)
+N_old <- nrow(crime_data)
+N_new <- nrow(new_locations)
+
+#dist matrix between new loc and exist
+# Calculate distance matrix between new locations and existing data points
+predict_distance_matrix <- as.matrix(dist(rbind(observed_locations, new_locations)))
+predict_distance_matrix <- predict_distance_matrix[(N_old+1):(N_old+N_new), 1:N_old]  # Only new to old
 
 ```
+
+```{r}
+
+# Extract parameters from the fitted model
+posterior_samples <- rstan::extract(fit)
+mu_est <- mean(posterior_samples$mu)
+range_est <- mean(posterior_samples$range)
+sill_est <- mean(posterior_samples$sill)
+nugget_est <- mean(posterior_samples$nugget)
+
+# Prediction  #i dont understand #can i just pretend sigma doesnt exist
+#Sigma_OO <- sill_est * exp(-distance_matrix / range_est) + diag(N_old) * nugget_est #these need to be generated in the model i thin
+#Sigma_ON <- sill_est * exp(-predict_distance_matrix / range_est) #needs to be generated in the model 
+predicted_means <- mu_est + Sigma_ON %*% solve(Sigma_OO, y - mu_est)
+
+```
+```{r}
+#i dont think i know what I'm doing
+new_data <- data.frame(new_locations, Z = as.vector(predicted_means))
+ggplot(new_data, aes(x = X, y = Y, fill = Z)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  coord_fixed() +
+  labs(title = "Spatial Interpolation Results", x = "X coordinate", y = "Y coordinate", fill = "Predicted Value")
+
+```
+
+
