@@ -30,16 +30,29 @@ crime_data <- read.csv("VanCrimeData2022.csv")
 crime_data <- na.omit(crime_data)
 crime_data$longitude <- crime_data$X
 crime_data$latitude <- crime_data$Y
-#crime_data_all <- crime_data[c(1:200),]
+crime_data_all <- crime_data
 crime_data_huh <- crime_data[c(101:200),]
 crime_data <- crime_data[-c(101:nrow(crime_data)), ]
 crime_data$BINMONTH <- as.numeric(crime_data$MONTH > 6)
-tail(crime_data)
+tail(crime_data_all)
 
 
 ```
 
 ```{r}
+#data exploration 
+
+ggplot(data = crime_data_all)+
+  geom_bar(aes(x = MONTH))
+
+ggplot(data = crime_data_all)+
+  geom_bar(aes(y = TYPE))
+```
+
+```{r}
+
+crime_data_sf_all <- st_as_sf(crime_data_all, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
+crime_data_sf_all <- st_transform(crime_data_sf_all, crs = 4326) # Convert to WGS84
 
 crime_data_sf <- st_as_sf(crime_data, coords = c("longitude", "latitude"), crs = 26710) # 26710 code for UTM10
 crime_data_sf <- st_transform(crime_data_sf, crs = 4326) # Convert to WGS84
@@ -78,9 +91,14 @@ library(ggplot2)
 
 ggplot() +
   geom_sf(data = area)+
-  geom_sf(data = crime_data_sf, aes(color = MONTH)) +
+  geom_sf(data = crime_data_sf) +
   ggtitle("Crime in Vancouver")
 
+```
+
+```{r}
+
+  
 ```
 
 ```{stan output.var = "canstangeo"}
@@ -120,6 +138,12 @@ model {
   // The likelihood of the observed data
   y ~ multi_normal(rep_vector(mu, N), Sigma);
 }
+
+generated quantities {
+  vector[N2] y_pred;
+  for (i in 1:N2) y_pred[i] = inv_logit(beta+y2[i]);
+}
+// generated quant ifelse
 
 ```
 
@@ -254,9 +278,10 @@ nugget_est <- mean(posterior_samples$nugget)
 # Prediction  #i dont understand #can i just pretend sigma doesnt exist
 #Sigma_OO <- sill_est * exp(-distance_matrix / range_est) + diag(N_old) * nugget_est #these need to be generated in the model i thin
 #Sigma_ON <- sill_est * exp(-predict_distance_matrix / range_est) #needs to be generated in the model 
-predicted_means <- mu_est + Sigma_ON %*% solve(Sigma_OO, y - mu_est)
+predicted_means <- mu_est #+ Sigma_ON %*% solve(Sigma_OO, y - mu_est)
 
 ```
+
 ```{r}
 #i dont think i know what I'm doing
 new_data <- data.frame(new_locations, Z = as.vector(predicted_means))
