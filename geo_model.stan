@@ -3,13 +3,17 @@ data {
   vector[N] x; // long of train
   vector[N] y; // lat of train
   vector[N] crimes; // count of train
+  
+  int<lower=0> N_new; // number of data points (test)
+  vector[N_new] x_new; // long of test
+  vector[N_new] y_new; //lat of test
 }
 
 parameters {
-  real alpha;
-  real<lower=0> rho;
-  real<lower=0> sigma;
-  real<lower=0> sigma_err;
+  real alpha; //intercept
+  real<lower=0> rho; //range
+  real<lower=0> sigma; //spatial variance
+  real<lower=0> sigma_err; // measurement error
 }
 
 model {
@@ -36,3 +40,19 @@ model {
     crimes ~ multi_normal(mu, sigma * exp(-dist/rho) + diag_matrix(rep_vector(sigma_err, N)));
   }
 }
+
+generated quantities{
+  vector[N_new] pred_crimes; //predicted crimes
+  matrix[N, N_new] new_dist; //distance from old to new
+  for (i in 1:N){
+    for (j in 1:N_new){
+      new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+    }
+  }
+  
+  for (i in 1:N_new){
+    pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
+  }
+}
+
+
