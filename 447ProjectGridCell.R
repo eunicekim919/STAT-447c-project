@@ -72,3 +72,5 @@ ggplot(full_data, aes(x = lon, y = lat, fill = crime_count)) +
   geom_tile() + 
   scale_fill_gradient(low = "blue", high = "red")+
   coord_fixed(ratio = 1)
+
+traceplot(fit)
