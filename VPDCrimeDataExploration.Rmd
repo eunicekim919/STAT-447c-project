@@ -1,7 +1,7 @@
 ---
 title: "VPD Crime Data Exploration"
-author: "Zelalem Araya (92797935)"
-date: "2024-04-05"
+author: "Zelalem Araya (92797935) & Youjung Kim (3876269)"
+date: "2024-04-25"
 output: pdf_document
 ---
 
@@ -96,8 +96,63 @@ ggplot() +
 
 ```
 
-```{r}
+```{stan output.var = "geo_model"}
+data {
+  int<lower=0> N; // number of data points (train)
+  vector[N] x; // long of train
+  vector[N] y; // lat of train
+  vector[N] crimes; // count of train
+  
+  int<lower=0> N_new; // number of data points (test)
+  vector[N_new] x_new; // long of test
+  vector[N_new] y_new; //lat of test
+}
 
+parameters {
+  real alpha; //intercept
+  real<lower=0> rho; //range
+  real<lower=0> sigma; //spatial variance
+  real<lower=0> sigma_err; // measurement error
+}
+
+model {
+  vector[N] mu;
+  
+  for (i in 1:N) {
+    mu[i] = alpha;
+  }
+  
+  // Priors
+  alpha ~ normal(0, 10);
+  rho ~ inv_gamma(2, 1);
+  sigma ~ normal(0, 1);
+  sigma_err ~ normal(0, 1);
+
+  // Spatial structure
+  {
+    matrix[N, N] dist;
+    for (i in 1:N) {
+      for (j in 1:N) {
+        dist[i, j] = sqrt(square(x[i] - x[j]) + square(y[i] - y[j]));
+      }
+    }
+    crimes ~ multi_normal(mu, sigma * exp(-dist/rho) + diag_matrix(rep_vector(sigma_err, N)));
+  }
+}
+
+generated quantities{
+  vector[N_new] pred_crimes; //predicted crimes
+  matrix[N, N_new] new_dist; //distance from old to new
+  for (i in 1:N){
+    for (j in 1:N_new){
+      new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+    }
+  }
+  
+  for (i in 1:N_new){
+    pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
+  }
+}
   
 ```
 
@@ -230,7 +285,7 @@ stan_data <- list(N = nrow(crime_data),
 ```{r message=FALSE, warning=FALSE, results=FALSE, dependson=knitr::dep_prev()}
 
 fit = sampling(
-  canstangeo,
+  geo_model,
   data = stan_data,
   chains = 1,
   refresh = 0,
@@ -243,6 +298,100 @@ print(fit)
 ```{r}
 samples <- rstan::extract(fit)
 ```
+
+
+```{r leave-one-out_1}
+library(rstan)
+
+# Assuming you've compiled the Stan model and stored it in 'model_file'
+
+# Function to perform LOOCV
+perform_loocv <- function(data, model_file) {
+  N <- nrow(data)
+  loo_predictions <- numeric(N)
+  
+  for (i in 1:N) {
+    # Create training/testing data excluding/including the i-th point
+    train_data <- data[-i, ]
+    test_data <- data[i, ]
+    
+    # Run the Stan model with training and testing data
+    stan_data <- list(
+      N = nrow(train_data),
+      x = train_data$logitude,
+      y = train_data$latitude,
+      crimes = nrow(stan_data),
+      N_new = nrow(test_data),
+      x_new = test_data$logitude,
+      y_new = test_data$latitude
+    )
+    
+    # Fit the model
+    fit <- sampling(geo_model,
+                data = stan_data, 
+                chains = 4,
+                iter = 1000)
+    
+    # Extract predictions for the i-th point
+    loo_predictions[i] <- as.numeric(fit$summary("pred_crimes")[1, "mean"])
+  }
+  
+  return(loo_predictions)
+}
+
+# Group the data by NEIGHBOURHOOD
+grouped_data <- split(crime_data, crime_data$NEIGHBOURHOOD)
+
+# Initialize vector to store LOO predictions
+loo_predictions <- numeric(0)
+
+# Loop over each group (NEIGHBOURHOOD)
+for (group in grouped_data) {
+  # Perform LOOCV for each group
+  loo_predictions <- c(loo_predictions, perform_loocv(group, "your_model.stan"))
+}
+
+# Calculate RMSE or MAE using loo_predictions and the true values
+# Compare the performance of Bayesian Kriging vs Classical Kriging
+
+```
+
+```{r leave-one-out_pre}
+
+# Assuming you have your distance matrix and crime_data prepared
+stan_data <- list(N = nrow(crime_data),
+                  y = crime_data$MONTH, 
+                  distance_matrix = dist_matrix,
+                  P = ncol(crime_data))
+
+
+parameter_draws_1 <- extract(fit)$beta
+stan_df_1 <- as.data.frame(stan_data)
+
+# compute relative efficiency (this is slow and optional but is recommended to allow 
+# for adjusting PSIS effective sample size based on MCMC effective sample size)
+r_eff <- relative_eff(llfun_logistic, 
+                      log = FALSE, # relative_eff wants likelihood not log-likelihood values
+                      chain_id = rep(1:4, each = 1000), 
+                      data = stan_df_1, 
+                      draws = parameter_draws_1, 
+                      cores = 2)
+loo_i(i = 1, llfun_logistic, r_eff = r_eff, data = stan_df_1, draws = parameter_draws_1)
+
+loo_ss_1 <- loo_subsample(
+  crime_data_sf,
+  observations = 100, # take a subsample of size 100
+  cores = 2, 
+  r_eff = r_eff,
+  draws = parameter_draws_1,
+  data = stan_df_1
+)
+
+print(loo_ss_1)
+
+  
+```
+
 
 ```{r}
 
