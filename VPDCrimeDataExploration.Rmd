@@ -303,8 +303,6 @@ samples <- rstan::extract(fit)
 ```{r leave-one-out_1}
 library(rstan)
 
-# Assuming you've compiled the Stan model and stored it in 'model_file'
-
 # Function to perform LOOCV
 perform_loocv <- function(data, model_file) {
   N <- nrow(data)
@@ -356,7 +354,7 @@ for (group in grouped_data) {
 
 ```
 
-```{r leave-one-out_pre}
+```{r leave-one-out_loo_subsample}
 
 # Assuming you have your distance matrix and crime_data prepared
 stan_data <- list(N = nrow(crime_data),
