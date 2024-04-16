@@ -12,6 +12,7 @@ library(dplyr)
 library(rstan)
 library(tidybayes)
 library(magrittr)
+library(loo)
 ```
 
 ```{r}
@@ -178,7 +179,6 @@ fit = sampling(geo_model_loo,
 ```
 
 ```{r}
-library("loo")
 log_lik_1 <- extract_log_lik(fit, merge_chains = FALSE)
 r_eff <- relative_eff(exp(log_lik_1), cores = 2)
 loo_1 <- loo(log_lik_1, r_eff, cores = 2)
@@ -186,7 +186,7 @@ print(loo_1)
 ```
 
 ```{r}
-# Compare this model to log-likelihood matrix
+# Compare this model to log matrix
 standata_2 <- standata
 standata_2$x <- log(standata$x)
 standata_2$y <- log(standata$y)
