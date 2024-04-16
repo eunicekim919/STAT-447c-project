@@ -196,7 +196,10 @@ standata_2$crimes <- log(standata$crimes)
 ```
 
 ```{r}
-fit_2 <- stan(fit = fit, data = standata,chains = 1)
+fit_2 <- stan(fit = fit, 
+              data = standata,
+              chains = 1, 
+              refresh = 0)
 log_lik_2 <- extract_log_lik(fit_2, merge_chains = FALSE)
 r_eff_2 <- relative_eff(exp(log_lik_2))
 loo_2 <- loo(log_lik_2, r_eff = r_eff_2, cores = 2)
