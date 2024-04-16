@@ -9,6 +9,7 @@ library(magrittr)
 set.seed(123)  # For reproducibility
 
 crime_data <- read.csv("VanCrimeDataDensity.csv")
+crime_data[!crime_data$COUNT %in% boxplot.stats(crime_data$COUNT)$out, ]
 crime_data <- crime_data[-c(201:nrow(crime_data)),] #for now
 
 # Assuming crime_data is your dataframe
@@ -66,7 +67,7 @@ full_data <- rbind(
   predicted_data[, c("lon", "lat", "crime_count")]
 )
 
-full_data <- na.omit(full)
+full_data <- na.omit(full_data)
 
 ggplot(full_data, aes(x = lon, y = lat, fill = crime_count)) +
   geom_tile() + 
@@ -74,3 +75,27 @@ ggplot(full_data, aes(x = lon, y = lat, fill = crime_count)) +
   coord_fixed(ratio = 1)
 
 traceplot(fit)
+
+
+# Calculate RMSE
+rmse <- sqrt(mean((predicted_data$crime_count - test_data$COUNT)^2))
+# Calculate MAE
+mae <- mean(abs(predicted_data$crime_count - test_data$COUNT))
+
+# Print the metrics
+print(paste("Root Mean Squared Error:", rmse))
+print(paste("Mean Absolute Error:", mae))
+
+library(ggplot2)
+
+# Combine test data and predicted data for plotting
+comparison_data <- cbind(test_data, predicted_data)
+
+ggplot(comparison_data, aes(x = lon, y = lat)) +
+  geom_tile(aes(fill = COUNT), alpha = 0.5) +  # Actual counts
+  geom_tile(aes(fill = crime_count), color = "grey", alpha = 0.5) +  # Predicted counts
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "Comparison of Actual and Predicted Crime Counts",
+       subtitle = paste("RMSE:", round(rmse, 2), "MAE:", round(mae, 2))) +
+  theme_minimal() +
+  theme(legend.position = "none")
