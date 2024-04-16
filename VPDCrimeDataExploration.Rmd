@@ -106,6 +106,9 @@ data {
   int<lower=0> N_new; // number of data points (test)
   vector[N_new] x_new; // long of test
   vector[N_new] y_new; //lat of test
+
+  int<lower =0> K; // number of folds  
+  int<lower=0> fold_indices[N]; // fold indices for cross-validation
 }
 
 parameters {
@@ -141,20 +144,42 @@ model {
 }
 
 generated quantities{
-  vector[N_new] pred_crimes; //predicted crimes
-  matrix[N, N_new] new_dist; //distance from old to new
-  for (i in 1:N){
-    for (j in 1:N_new){
-      new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+  vector[N] log_lik;
+  
+  for (n in 1:N) {
+    vector[N_new] pred_crimes; //predicted crimes
+    {
+    matrix[N, N_new] new_dist; //distance from old to new
+    for (i in 1:N){
+      for (j in 1:N_new){
+        new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+      }
+    }
+    
+    for (i in 1:N_new){
+      pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
     }
   }
-  
-  for (i in 1:N_new){
-    pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
+  log_lik[n] = normal_lpdf(crimes[n] | pred_crimes[n], sigma_err);
   }
 }
   
 ```
+
+```{r fit}
+library("rstan")
+
+fit = sampling(
+  geo_model,
+  data = stan_data,
+  chains = 1,
+  refresh = 0,
+  iter = 2000
+)
+
+print(fit)
+```
+
 
 ```{stan output.var = "canstangeo"}
 data {
@@ -310,8 +335,8 @@ perform_loocv <- function(data, model_file) {
   
   for (i in 1:N) {
     # Create training/testing data excluding/including the i-th point
-    train_data <- data[-i, ]
-    test_data <- data[i, ]
+    train_data <- data[-i, drop = FALSE]
+    test_data <- data[i, drop = FALSE]
     
     # Run the Stan model with training and testing data
     stan_data <- list(
@@ -337,6 +362,9 @@ perform_loocv <- function(data, model_file) {
   return(loo_predictions)
 }
 
+```
+
+```{r leave-one-out_2}
 # Group the data by NEIGHBOURHOOD
 grouped_data <- split(crime_data, crime_data$NEIGHBOURHOOD)
 
@@ -346,7 +374,7 @@ loo_predictions <- numeric(0)
 # Loop over each group (NEIGHBOURHOOD)
 for (group in grouped_data) {
   # Perform LOOCV for each group
-  loo_predictions <- c(loo_predictions, perform_loocv(group, "your_model.stan"))
+  loo_predictions <- c(loo_predictions, perform_loocv(group, geo_model))
 }
 
 # Calculate RMSE or MAE using loo_predictions and the true values
