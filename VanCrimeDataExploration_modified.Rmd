@@ -163,14 +163,15 @@ generated quantities{
 ```
 
 ```{r}
-fit = sampling(geo_model_loo, 
-               data = list(N = nrow(train_data),
+standata <- list(N = nrow(train_data),
                            x = train_data$X_Coord,
                            y = train_data$Y_Coord,
                            crimes = train_data$COUNT,
                            N_new = nrow(test_data),
                            x_new = test_data$X_Coord,
-                           y_new = test_data$Y_Coord),
+                           y_new = test_data$Y_Coord)
+fit = sampling(geo_model_loo, 
+               data = standata,
                chains = 1,
                refresh = 0, 
                iter = 2000)
@@ -221,12 +222,28 @@ loo_1 <- loo(log_lik_1, r_eff, cores = 2)
 print(loo_1)
 ```
 
-```{r}
 
+```{r}
+# Compare this model to log-likelihood matrix
+standata_2 <- standata
+standata_2$x <- log(standata$x)
+standata_2$y <- log(standata$y)
+standata_2$x_new <- log(standata$x_new)
+standata_2$y_new <- log(standata$y_new)
+standata_2$crimes <- log(standata$crimes)
 ```
 
 ```{r}
+fit_2 <- stan(fit = fit, data = standata,chains = 1)
+log_lik_2 <- extract_log_lik(fit_2, merge_chains = FALSE)
+r_eff_2 <- relative_eff(exp(log_lik_2))
+loo_2 <- loo(log_lik_2, r_eff = r_eff_2, cores = 2)
+print(loo_2)
+```
 
+```{r}
+diff <- loo_compare(loo_1, loo_2)
+print(diff)
 ```
 
 ```{stan output.var = "geo_model"}
