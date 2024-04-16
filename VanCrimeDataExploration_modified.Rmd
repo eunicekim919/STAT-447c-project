@@ -1,0 +1,234 @@
+---
+title: "vancouver crime prediction"
+author: "Zelalem Araya (92797935) & Youjung Kim (3876269)"
+date: "2024-04-18"
+output: pdf_document
+---
+
+```{r}
+library(ggplot2)
+library(sf)
+library(dplyr)
+library(rstan)
+library(tidybayes)
+library(magrittr)
+```
+
+```{r}
+#all the data things
+set.seed(123)  # For reproducibility
+
+crime_data <- read.csv("VanCrimeDataDensity.csv")
+crime_data <- crime_data[-c(201:nrow(crime_data)),] #for now
+```
+
+```{r}
+# Assuming crime_data is your dataframe
+ggplot(crime_data, aes(x = X_Coord, y = Y_Coord, fill = COUNT)) +
+  geom_tile() +  # creates the grid cells
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "Crime Density in Vancouver", fill = "Number of Crimes")+
+  coord_fixed(ratio = 1)  # keeps the aspect ratio of 1:1
+```
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Sample 80% of the data to keep
+train_indices <- sample(nrow(crime_data), size = 0.8 * nrow(crime_data))
+train_data <- crime_data[train_indices, ]
+test_data <- crime_data[-train_indices, ]
+```
+
+```{stan output.var = "geo_model"}
+data {
+  int<lower=0> N; // number of data points (train)
+  vector[N] x; // long of train
+  vector[N] y; // lat of train
+  vector[N] crimes; // count of train
+  
+  int<lower=0> N_new; // number of data points (test)
+  vector[N_new] x_new; // long of test
+  vector[N_new] y_new; //lat of test
+}
+
+parameters {
+  real alpha; //intercept
+  real<lower=0> rho; //range
+  real<lower=0> sigma; //spatial variance
+  real<lower=0> sigma_err; // measurement error
+}
+
+model {
+  vector[N] mu;
+  
+  for (i in 1:N) {
+    mu[i] = alpha;
+  }
+  
+  // Priors
+  alpha ~ normal(0, 10);
+  rho ~ inv_gamma(2, 1);
+  sigma ~ normal(0, 1);
+  sigma_err ~ normal(0, 1);
+
+  // Spatial structure
+  {
+    matrix[N, N] dist;
+    for (i in 1:N) {
+      for (j in 1:N) {
+        dist[i, j] = sqrt(square(x[i] - x[j]) + square(y[i] - y[j]));
+      }
+    }
+    crimes ~ multi_normal(mu, sigma * exp(-dist/rho) + diag_matrix(rep_vector(sigma_err, N)));
+  }
+}
+
+generated quantities{
+  vector[N_new] pred_crimes; //predicted crimes
+  matrix[N, N_new] new_dist; //distance from old to new
+  for (i in 1:N){
+    for (j in 1:N_new){
+      new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+    }
+  }
+  
+  for (i in 1:N_new){
+    pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
+  }
+}
+```
+
+```{stan output.var = "geo_model_loo"}
+data {
+  int<lower=0> N; // number of data points (train)
+  vector[N] x; // long of train
+  vector[N] y; // lat of train
+  vector[N] crimes; // count of train
+  
+  int<lower=0> N_new; // number of data points (test)
+  vector[N_new] x_new; // long of test
+  vector[N_new] y_new; //lat of test
+}
+
+parameters {
+  real alpha; //intercept
+  real<lower=0> rho; //range
+  real<lower=0> sigma; //spatial variance
+  real<lower=0> sigma_err; // measurement error
+}
+
+model {
+  vector[N] mu;
+  
+  for (i in 1:N) {
+    mu[i] = alpha;
+  }
+  
+  // Priors
+  alpha ~ normal(0, 10);
+  rho ~ inv_gamma(2, 1);
+  sigma ~ normal(0, 1);
+  sigma_err ~ normal(0, 1);
+
+  // Spatial structure
+  {
+    matrix[N, N] dist;
+    for (i in 1:N) {
+      for (j in 1:N) {
+        dist[i, j] = sqrt(square(x[i] - x[j]) + square(y[i] - y[j]));
+      }
+    }
+    crimes ~ multi_normal(mu, sigma * exp(-dist/rho) + diag_matrix(rep_vector(sigma_err, N)));
+  }
+}
+
+generated quantities{
+  vector[N_new] log_lik; 
+  vector[N_new] pred_crimes; //predicted crimes
+  matrix[N, N_new] new_dist; //distance from old to new
+  for (i in 1:N){
+    for (j in 1:N_new){
+      new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+    }
+  }
+  
+  for (i in 1:N_new){
+    pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
+    log_lik[i] = normal_lpdf(crimes[i] | pred_crimes[i], sigma_err);
+  }
+}
+ 
+```
+
+```{r}
+fit = sampling(geo_model_loo, 
+               data = list(N = nrow(train_data),
+                           x = train_data$X_Coord,
+                           y = train_data$Y_Coord,
+                           crimes = train_data$COUNT,
+                           N_new = nrow(test_data),
+                           x_new = test_data$X_Coord,
+                           y_new = test_data$Y_Coord),
+               chains = 1,
+               refresh = 0, 
+               iter = 2000)
+```
+
+```{r}
+samples = rstan::extract(fit)
+
+predicted_crimes <- samples$pred_crimes
+
+mean_predicted_crimes <- apply(predicted_crimes, 2, mean)
+
+predicted_data <- data.frame(lon = test_data$X_Coord,
+                             lat = test_data$Y_Coord,
+                             crime_count = mean_predicted_crimes)
+```
+
+```{r}
+train <- data.frame(
+  lon = train_data$X_Coord,
+  lat = train_data$Y_Coord,
+  crime_count = train_data$COUNT
+)
+
+# Combine both datasets
+full_data <- rbind(
+  train[, c("lon", "lat", "crime_count")],
+  predicted_data[, c("lon", "lat", "crime_count")]
+)
+
+full_data <- na.omit(full_data)
+```
+
+```{r}
+ggplot(full_data, aes(x = lon, y = lat, fill = crime_count)) +
+  geom_tile() + 
+  scale_fill_gradient(low = "blue", high = "red")+
+  coord_fixed(ratio = 1)
+
+traceplot(fit)
+```
+
+```{r}
+library("loo")
+log_lik_1 <- extract_log_lik(fit, merge_chains = FALSE)
+r_eff <- relative_eff(exp(log_lik_1), cores = 2)
+loo_1 <- loo(log_lik_1, r_eff, cores = 2)
+print(loo_1)
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{stan output.var = "geo_model"}
+
+```
