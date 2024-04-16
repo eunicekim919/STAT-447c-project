@@ -1,0 +1,11 @@
+1. Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC
+
+https://link.springer.com/article/10.1007/s11222-016-9696-4
+
+2. Writing Stan programs for use with the loo package
+
+https://cran.r-project.org/web/packages/loo/vignettes/loo2-with-rstan.html
+
+3. Geostatistical modelling with R and Stan
+
+https://aheblog.com/2016/12/07/geostatistical-modelling-with-r-and-stan/
