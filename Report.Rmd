@@ -9,10 +9,16 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Introduction 
+##Introduction 
+
 ##Background 
+
 ##Methods 
+
 ##Results 
+
 ##Discussion 
+- Modifiable Areal Unit Problem (MAUP) may come into play when grouping data
+
 ##Conclusion
 
