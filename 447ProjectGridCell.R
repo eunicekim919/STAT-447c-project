@@ -43,6 +43,18 @@ fit = stan(file = 'geo_model.stan',
                refresh = 0, 
                iter = 2000)
 
+fit = stan(file = 'bayes_geo_model.stan', 
+           data = list(N = nrow(train_data),
+                       x = train_data$X_Coord,
+                       y = train_data$Y_Coord,
+                       crimes = train_data$COUNT,
+                       N_new = nrow(test_data),
+                       x_new = test_data$X_Coord,
+                       y_new = test_data$Y_Coord),
+           chains = 1,
+           refresh = 0, 
+           iter = 2000)
+
 
 samples = rstan::extract(fit)
 
@@ -86,7 +98,6 @@ mae <- mean(abs(predicted_data$crime_count - test_data$COUNT))
 print(paste("Root Mean Squared Error:", rmse))
 print(paste("Mean Absolute Error:", mae))
 
-library(ggplot2)
 
 # Combine test data and predicted data for plotting
 comparison_data <- cbind(test_data, predicted_data)

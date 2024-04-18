@@ -34,7 +34,7 @@ test_data <- crime_data_2023
 
 
 
-fit = stan(file = 'geo_model.stan', 
+fit = stan(file = 'bayes_geo_model.stan', 
            data = list(N = nrow(train_data),
                        x = train_data$X_Coord,
                        y = train_data$Y_Coord,
