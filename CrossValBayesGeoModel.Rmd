@@ -21,13 +21,27 @@ set.seed(123)  # For reproducibility
 
 crime_data <- read.csv("VanCrimeDataDensity.csv")
 crime_data <- crime_data[-c(201:nrow(crime_data)),] #for now
+head(crime_data)
 ```
 
 ```{r}
-# missing data exmination
-which(is.na(crime_data))
-sum(is.na(crime_data))
+library(readr)
+crime_data <- read_csv("~/Downloads/crime_records.csv")
 ```
+
+
+```{r}
+# missing data exmination
+sum(is.na(crime_data$NEIGHBOURHOOD))
+```
+
+```{r}
+# crime counts by year
+ggplot(data = crime_data, aes(x = YEAR)) + 
+  geom_bar() +
+  facet_wrap(~NEIGHBOURHOOD, ncol = 5) 
+```
+
 
 ```{r}
 # Assuming crime_data is your dataframe
