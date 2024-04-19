@@ -10,9 +10,9 @@ data {
 }
 
 parameters {
-  real<lower=0> length_scale;
+  real<lower=0> rho;
   real<lower=0> sigma; // scale of the output
-  real<lower=0> sigma_noise; // noise level
+  real<lower=0> sigma_err; // noise level
 }
 
 transformed parameters {
@@ -20,20 +20,20 @@ transformed parameters {
   for (i in 1:N) {
     for (j in i:N) {
       real dist = sqrt(square(x[i] - x[j]) + square(y[i] - y[j]));
-      covar_matrix[i, j] = sigma * exp(-dist / length_scale);
+      covar_matrix[i, j] = sigma * exp(-dist / rho);
       if (i != j) {
         covar_matrix[j, i] = covar_matrix[i, j]; // Symmetric matrix
       }
     }
-    covar_matrix[i, i] += sigma_noise^2; // adding noise variance to the diagonal
+    covar_matrix[i, i] += sigma_err^2; // adding noise variance to the diagonal
   }
 }
 
 model {
   // Priors
-  length_scale ~ inv_gamma(5, 5);
+  rho ~ inv_gamma(5, 5);
   sigma ~ normal(0, 1);
-  sigma_noise ~ normal(0, 0.1);
+  sigma_err ~ normal(0, 0.1);
 
   // Likelihood
   crimes ~ multi_normal_cholesky(rep_vector(0, N), cholesky_decompose(covar_matrix));
@@ -54,7 +54,7 @@ generated quantities {
   matrix[N, N_new] k_x_xnew;
   for (i in 1:N) {
     for (j in 1:N_new) {
-      k_x_xnew[i, j] = sigma * exp(-new_dist[i, j] / length_scale);
+      k_x_xnew[i, j] = sigma * exp(-new_dist[i, j] / rho);
     }
   }
 
