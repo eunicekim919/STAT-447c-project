@@ -26,7 +26,7 @@ head(crime_data)
 
 ```{r}
 library(readr)
-crime_data <- read_csv("~/Downloads/crime_records.csv")
+#crime_data <- read_csv("~/Downloads/crime_records.csv")
 ```
 
 
@@ -37,9 +37,9 @@ sum(is.na(crime_data$NEIGHBOURHOOD))
 
 ```{r}
 # crime counts by year
-ggplot(data = crime_data, aes(x = YEAR)) + 
-  geom_bar() +
-  facet_wrap(~NEIGHBOURHOOD, ncol = 5) 
+# ggplot(data = crime_data, aes(x = YEAR)) + 
+#   geom_bar() +
+#   facet_wrap(~NEIGHBOURHOOD, ncol = 5) 
 ```
 
 
@@ -61,6 +61,8 @@ train_indices <- sample(nrow(crime_data), size = 0.8 * nrow(crime_data))
 train_data <- crime_data[train_indices, ]
 test_data <- crime_data[-train_indices, ]
 ```
+
+### Spatial Model
 
 ```{stan output.var = "geo_model"}
 data {
@@ -120,6 +122,8 @@ generated quantities{
   }
 }
 ```
+
+### Spatial Model with loocv
 
 ```{stan output.var = "geo_model_loo"}
 data {
@@ -182,6 +186,108 @@ generated quantities{
 }
  
 ```
+
+### Fit Spatial Model with loocv
+
+```{r}
+standata <- list(N = nrow(train_data),
+                           x = train_data$X_Coord,
+                           y = train_data$Y_Coord,
+                           crimes = train_data$COUNT,
+                           N_new = nrow(test_data),
+                           x_new = test_data$X_Coord,
+                           y_new = test_data$Y_Coord)
+fit = sampling(geo_model_loo, 
+               data = standata,
+               chains = 1,
+               refresh = 0, 
+               iter = 2000)
+```
+
+```{r}
+log_lik_1 <- extract_log_lik(fit, merge_chains = FALSE)
+r_eff <- relative_eff(exp(log_lik_1), cores = 2)
+loo_1 <- loo(log_lik_1, r_eff, cores = 2)
+print(loo_1)
+```
+
+```{r}
+# Compare this model to log matrix
+standata_2 <- standata
+standata_2$x <- log(standata$x)
+standata_2$y <- log(standata$y)
+standata_2$x_new <- log(standata$x_new)
+standata_2$y_new <- log(standata$y_new)
+standata_2$crimes <- log(standata$crimes)
+```
+
+```{r}
+fit_2 <- stan(fit = fit, 
+              data = standata,
+              chains = 1, 
+              refresh = 0)
+log_lik_2 <- extract_log_lik(fit_2, merge_chains = FALSE)
+r_eff_2 <- relative_eff(exp(log_lik_2))
+loo_2 <- loo(log_lik_2, r_eff = r_eff_2, cores = 2)
+print(loo_2)
+```
+
+```{r}
+diff <- loo_compare(loo_1, loo_2)
+print(diff)
+```
+
+```{r}
+samples = rstan::extract(fit)
+
+predicted_crimes <- samples$pred_crimes
+
+mean_predicted_crimes <- apply(predicted_crimes, 2, mean)
+
+predicted_data <- data.frame(lon = test_data$X_Coord,
+                             lat = test_data$Y_Coord,
+                             crime_count = mean_predicted_crimes)
+```
+
+```{r}
+train <- data.frame(
+  lon = train_data$X_Coord,
+  lat = train_data$Y_Coord,
+  crime_count = train_data$COUNT
+)
+
+# Combine both datasets
+full_data <- rbind(
+  train[, c("lon", "lat", "crime_count")],
+  predicted_data[, c("lon", "lat", "crime_count")]
+)
+
+full_data <- na.omit(full_data)
+```
+
+```{r}
+ggplot(full_data, aes(x = lon, y = lat, fill = crime_count)) +
+  geom_tile() + 
+  scale_fill_gradient(low = "blue", high = "red")+
+  coord_fixed(ratio = 1)
+
+traceplot(fit)
+```
+
+```{r}
+
+# Calculate RMSE
+rmse <- sqrt(mean((predicted_data$crime_count - test_data$COUNT)^2))
+# Calculate MAE
+mae <- mean(abs(predicted_data$crime_count - test_data$COUNT))
+
+# Print the metrics
+print(paste("Root Mean Squared Error:", rmse))
+print(paste("Mean Absolute Error:", mae))
+
+```
+
+## Bayesian Spatial Model with loocv
 
 ```{stan output.var = "bayes_geo_model_loo"}
 data {
@@ -257,6 +363,8 @@ generated quantities {
 }
 
 ```
+
+## Fit Bayesian Spatial Model with loocv
 
 ```{r}
 standata <- list(N = nrow(train_data),
