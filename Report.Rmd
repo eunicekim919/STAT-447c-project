@@ -51,7 +51,11 @@ Both models utilize observed crime counts at training locations to estimate the 
 * sufficient context needed to understand the problem
 * Relevant literature is cited and summarized
 
+Martin Wieskotten, Marielle Crozet, Bertrand Iooss, Céline Lacaux, Amandine Marrel. A comparison between Bayesian and ordinary kriging based on validation criteria: application to radiological characterisation. 2023. hal-03806713v2 (https://hal.science/hal-03806713v2/file/bayeskrig_clean.pdf)
 
+Wiskotten et al. discuss the use of spatial interpolation techniques, specifically ordinary kriging and Bayesian kriging, in the context of radiological characterization for nuclear facility decommissioning projects. Their object is to estimate the quantity and spatial distribution of various radionuclides by performing measurements and using spatial interpolation to predict contamination levels at unobserved locations. In this paper, the usefulness of Bayesian kriging is demonstrated through numerical tests on toy models and a real dataset from the decommissioning project of the CEA Marcoule G3 reactor. To compare the performance of Bayesian kriging with ordinary kriging, they used various way to check the model validation such as the predictive variance adequacy, confidence interval or mean squared error. 
+
+Wiskotten et al. highlight that the Bayesian approach addresses that a common criticism of spatial interpolation methods, the neglect of uncertainty in the esimation of model parameters. By treating model parameters as random variables, Bayesian kringing accounts for this uncertainty, leading to better prediction variances. While Wiskotten et al.'s study focuses on radiological characterization in decommissioning projects, our research centers on predicting crime occurrences in Vancouver using spatial modeling techniques. Our aim is to assess the robustness of the Bayesian kriging approach compared to the universal kriging approach. We will evaluate our models based on the estimates expected log predictive density, the LOO information criterion and root mean squared error(RMSE).
 
 
 
@@ -71,6 +75,8 @@ Both models utilize observed crime counts at training locations to estimate the 
 In conclusion, our study demonstrates the effectiveness of Bayesian modeling techniques for crime prediction. Both Universal Kriging and Bayesian Kriging offer valuable insights into the spatial distribution of crimes and provide reliable predictions for law enforcement agencies and urban planners.
 
 One key limitation of our study is the assumption of stationarity in the spatial processes(?). Additionally, the choice of priors and hyperparameters may influence the model's performance and generalization ability
+
+The importance of accounting for uncertainties in spatial modeling, showcasing the relevance of Bayesian methods in such applications.
 
 ## Appendix A
 * implementation code in the appendix (using Stan)
