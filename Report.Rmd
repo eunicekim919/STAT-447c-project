@@ -38,7 +38,7 @@ where $d_{ij} = || x_i - x_j ||$ represents the Euclidean distance between two p
 *REVISIT*
 $Y_i ~ Bin(m_i, p(x_i))$ for $i = 1,\dots, n$ denotes the observed outcomes from the location $i$
 
-#### Bayesain Kriging Model
+#### Bayesian Kriging Model
 
 Similarly, the Bayesian Kriging model incorporates spatial modeling through a covariance structure, utilizing a parametric function of distance based on longitude and latitude. Within a Bayesian framework, we estimate the parameters of this covariance function, including the length scale parameters, which determine the rate of spatial correlation decay with distance. To be specific,  we use a Bayesian framework to estimate the parameters of this covariance function. A shorter length scale implies that neighbouring locations have a stronger influence on each other, while a longer length scale indicates a more gradual decay of spatial correlation. 
 
@@ -50,6 +50,10 @@ Both models utilize observed crime counts at training locations to estimate the 
 ##Background 
 * sufficient context needed to understand the problem
 * Relevant literature is cited and summarized
+
+
+
+
 
 ##Methods 
 * Bayesian model is precisely described(using ~ notation)
@@ -63,6 +67,10 @@ Both models utilize observed crime counts at training locations to estimate the 
 
 ##Conclusion
 * key limitations
+
+In conclusion, our study demonstrates the effectiveness of Bayesian modeling techniques for crime prediction. Both Universal Kriging and Bayesian Kriging offer valuable insights into the spatial distribution of crimes and provide reliable predictions for law enforcement agencies and urban planners.
+
+One key limitation of our study is the assumption of stationarity in the spatial processes(?). Additionally, the choice of priors and hyperparameters may influence the model's performance and generalization ability
 
 ## Appendix A
 * implementation code in the appendix (using Stan)
