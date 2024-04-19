@@ -24,6 +24,12 @@ crime_data <- crime_data[-c(201:nrow(crime_data)),] #for now
 ```
 
 ```{r}
+# missing data exmination
+which(is.na(crime_data))
+sum(is.na(crime_data))
+```
+
+```{r}
 # Assuming crime_data is your dataframe
 ggplot(crime_data, aes(x = X_Coord, y = Y_Coord, fill = COUNT)) +
   geom_tile() +  # creates the grid cells
