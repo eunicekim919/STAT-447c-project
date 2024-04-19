@@ -15,8 +15,37 @@ https://github.com/eunicekim919/STAT-447c-project.git
 ## Contributions of each team member:
 
 ##Introduction (Problem formulation)
-* A real-world infererence task/problem
-* The key modeling/methodological/challege, clearly associating with the project theme we chose
+* A real-world inference task/problem
+* The key modeling/methodological/challenge, clearly associating with the project theme we chose
+
+Our study aims to model the spatial distribution of crimes in Vancouver, utilizing data from the Vancouver Police Department covering the years 2013 to 2019. By analyzing crime records from discrete locations across the city, we seek to provide accurate predictions for future crime occurrences in the particular city in Vancouver. This falls within the realm of spatial data analysis and predictive modeling.
+
+### Data Preprocessing
+
+Upon examining the dataset, we discovered missing 'NEIGHBORHOOD' data for approximately 10.42% of the records, which is 64962 of 624038. However, leveraging the available longitude and latitude coordinates (denoted as X and Y), we can predict the missing neighborhood data, enabling us to proceed with geostatistical modeling.
+
+### Spatial Models
+
+In our study, we explore two Spatial modeling techniques for crime prediction: Universal Kriging and Bayesian Kriging. These models analyze spatially discrete crime data sampled across Vancouver, aiming to predict crime outcomes in various areas of the city.
+
+#### Universal Kringing Model 
+
+The Universal Kriging model employs a spatial covariance function to capture the similarity or correlation between crime counts at different locations. This function, typically a parametric decay function such as the exponential or Gaussian function, describes how spatial correlation diminishes with distance. Here, we utilize the exponential function, parameterized by the range parameter (\phi), to control the spatial structure of the model.
+
+*REVISIT*
+$k(x_{ij}) = exp(-\phi d_{ij}) + \mathbb{1}_{i=j} \sigma^2$
+where $d_{ij} = || x_i - x_j ||$ represents the Euclidean distance between two points, and 
+*REVISIT*
+$Y_i ~ Bin(m_i, p(x_i))$ for $i = 1,\dots, n$ denotes the observed outcomes from the location $i$
+
+#### Bayesain Kriging Model
+
+Similarly, the Bayesian Kriging model incorporates spatial modeling through a covariance structure, utilizing a parametric function of distance based on longitude and latitude. Within a Bayesian framework, we estimate the parameters of this covariance function, including the length scale parameters, which determine the rate of spatial correlation decay with distance. To be specific,  we use a Bayesian framework to estimate the parameters of this covariance function. A shorter length scale implies that neighbouring locations have a stronger influence on each other, while a longer length scale indicates a more gradual decay of spatial correlation. 
+
+For this Bayesian Kriging model, we specify prior for our parameters and hyperparameters. *ADD HERE*
+
+Both models utilize observed crime counts at training locations to estimate the parameters of the spatial covariance function. Once estimated, the models make predictions for crime counts at unobserved locations using leave-one-out cross-validation. This spatial modeling approach accounts for spatial autocorrelation in crime data, enhancing the accuracy of crime predictions.
+
 
 ##Background 
 * sufficient context needed to understand the problem
