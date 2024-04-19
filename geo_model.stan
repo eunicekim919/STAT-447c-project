@@ -25,7 +25,7 @@ model {
   
   // Priors
   alpha ~ normal(0, 10);
-  rho ~ inv_gamma(2, 1);
+  rho ~ inv_gamma(5, 5);
   sigma ~ normal(0, 1);
   sigma_err ~ normal(0, 1);
 
