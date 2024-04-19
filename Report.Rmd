@@ -1,5 +1,5 @@
 ---
-title: "STAT447 Final Project Report"
+title: "A Hierarchical(Kriging) Bayesian Model vs A Hierarchical(Kriging) Model with R and Stan"
 author: "Zelalem Araya (92797935) & Youjung Kim (3876269)"
 date: "2024-04-17"
 output: pdf_document
@@ -9,11 +9,23 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-##Introduction 
+## Working link to a public repo:
+https://github.com/eunicekim919/STAT-447c-project.git
+
+## Contributions of each team member:
+
+##Introduction (Problem formulation)
+* A real-world infererence task/problem
+* The key modeling/methodological/challege, clearly associating with the project theme we chose
 
 ##Background 
+* sufficient context needed to understand the problem
+* Relevant literature is cited and summarized
 
 ##Methods 
+* Bayesian model is precisely described(using ~ notation)
+* Prior choice is motivated. If appropriate, several choices are compared or sensitivity analysis is performed. 
+* Critical evaluation of the posterior approximation. An appropriate combination of diagnostics, synthetic datasets and other validation strategies.
 
 ##Results 
 
@@ -21,4 +33,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - Modifiable Areal Unit Problem (MAUP) may come into play when grouping data
 
 ##Conclusion
+* key limitations
 
+## Appendix A
+* implementation code in the appendix (using Stan)
