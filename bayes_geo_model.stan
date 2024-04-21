@@ -61,5 +61,5 @@ generated quantities {
   // Prediction mean
   matrix[N_new, N] k_xnew_x = k_x_xnew'; // Transpose
   vector[N] alpha = cholesky_decompose(covar_matrix) \ crimes; // Cholesky factorization and solve
-  pred_crimes = k_xnew_x * alpha;
+  pred_crimes = k_xnew_x * alpha + mean(crimes);
 }
