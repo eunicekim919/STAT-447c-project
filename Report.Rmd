@@ -18,7 +18,7 @@ https://github.com/eunicekim919/STAT-447c-project.git
 * A real-world inference task/problem
 * The key modeling/methodological/challenge, clearly associating with the project theme we chose
 
-Our study aims to model the spatial distribution of crimes in Vancouver, utilizing data from the Vancouver Police Department covering the years 2013 to 2019. By analyzing crime records from discrete locations across the city, we seek to provide accurate predictions for future crime occurrences in the particular city in Vancouver. This falls within the realm of spatial data analysis and predictive modeling.
+As residents of Vancouver, we can attest to the prevailing concern among city dwellers regarding crime incidents within our neighborhoods. In line with this shared sentiment, our study endeavors to delve into the spatial dynamics of crime within Vancouver, utilizing data from the Vancouver Police Department covering the years 2013 to 2019. By analyzing crime records from discrete locations across the city, we seek to provide accurate predictions for future crime occurrences in the particular city in Vancouver. This falls within the realm of spatial data analysis and predictive modeling.
 
 ### Data Preprocessing
 
@@ -28,9 +28,9 @@ Upon examining the dataset, we discovered missing 'NEIGHBORHOOD' data for approx
 
 In our study, we explore two Spatial modeling techniques for crime prediction: Universal Kriging and Bayesian Kriging. These models analyze spatially discrete crime data sampled across Vancouver, aiming to predict crime outcomes in various areas of the city.
 
-#### Universal Kringing Model 
+#### Universal Krining Model 
 
-The Universal Kriging model employs a spatial covariance function to capture the similarity or correlation between crime counts at different locations. This function, typically a parametric decay function such as the exponential or Gaussian function, describes how spatial correlation diminishes with distance. Here, we utilize the exponential function, parameterized by the range parameter ($\phi$), to control the spatial structure of the model.
+According to recent research (Mooney et al., 2018), the Universal Kriging model employs a spatial covariance function to capture the similarity or correlation between crime counts at different locations. This function, typically a parametric decay function such as the exponential or Gaussian function, describes how spatial correlation diminishes with distance. Here, we utilize the exponential function, parameterized by the range parameter ($\phi$), to control the spatial structure of the model.
 
 *REVISIT*
 $k(x_{ij}) = exp(-\phi d_{ij}) + \mathbb{1}_{i=j} \sigma^2$
@@ -40,7 +40,7 @@ $Y_i ~ Bin(m_i, p(x_i))$ for $i = 1,\dots, n$ denotes the observed outcomes from
 
 #### Bayesian Kriging Model
 
-Similarly, the Bayesian Kriging model incorporates spatial modeling through a covariance structure, utilizing a parametric function of distance based on longitude and latitude. Within a Bayesian framework, we estimate the parameters of this covariance function, including the length scale parameters, which determine the rate of spatial correlation decay with distance. To be specific,  we use a Bayesian framework to estimate the parameters of this covariance function. A shorter length scale implies that neighbouring locations have a stronger influence on each other, while a longer length scale indicates a more gradual decay of spatial correlation. 
+Similarly, the Bayesian Kriging model, as discussed by Zhang and Du (2019), incorporates spatial modeling through a covariance structure, utilizing a parametric function of distance based on longitude and latitude as random variables. Within a Bayesian framework, we estimate the parameters of this covariance function, including the length scale parameters, which determine the rate of spatial correlation decay with distance. To be specific,  we use a Bayesian framework to estimate the parameters of this covariance function. A shorter length scale implies that neighbouring locations have a stronger influence on each other, while a longer length scale indicates a more gradual decay of spatial correlation. 
 
 For this Bayesian Kriging model, we specify prior for our parameters and hyperparameters. *ADD HERE*
 
@@ -50,8 +50,6 @@ Both models utilize observed crime counts at training locations to estimate the 
 ##Background 
 * sufficient context needed to understand the problem
 * Relevant literature is cited and summarized
-
-Martin Wieskotten, Marielle Crozet, Bertrand Iooss, Céline Lacaux, Amandine Marrel. A comparison between Bayesian and ordinary kriging based on validation criteria: application to radiological characterisation. 2023. hal-03806713v2 (https://hal.science/hal-03806713v2/file/bayeskrig_clean.pdf)
 
 Wiskotten et al. discuss the use of spatial interpolation techniques, specifically ordinary kriging and Bayesian kriging, in the context of radiological characterization for nuclear facility decommissioning projects. Their object is to estimate the quantity and spatial distribution of various radionuclides by performing measurements and using spatial interpolation to predict contamination levels at unobserved locations. In this paper, the usefulness of Bayesian kriging is demonstrated through numerical tests on toy models and a real dataset from the decommissioning project of the CEA Marcoule G3 reactor. To compare the performance of Bayesian kriging with ordinary kriging, they used various way to check the model validation such as the predictive variance adequacy, confidence interval or mean squared error. 
 
@@ -96,9 +94,9 @@ The results from the 'loo' function provide estimates for the expected log predi
 
 We built two different Bayesian Kriging models to compare: one using the original data(standard model) and another using the logarithmic transformation(log model). To determine which model have better predictive performance, we employed the 'loo_compare' function to evaluate the fit of the models.The decision between the standard model and the log model allows us to find the suitable model to compare two Kriging models. 
 
-The Expected Log Predictive Density(ELPD) is a measure of the model's predictive performance. A higher ELPD suggest better predictive accuracy. Our standard Bayesian Kringing model had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The alternative log model using Bayesian Kringing showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
+The Expected Log Predictive Density (ELPD) is a measure of the model's predictive performance, as it serves as a theoretically motivated metric for evaluating predictive ability (Oelrich & Villani, 2024). A higher ELPD suggest better predictive accuracy. Our standard Bayesian Kringing model had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The alternative log model using Bayesian Kringing showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
 
-The effective number of parameters is a measure of model complexity, indicating how much the model has adapted to the data. In our standard Bayesian Kringing model, this value was 383.7 with a standard error of 112.2. The alternative log model had a slightly lower effective number of parameters at 372.9 with a standard error of 111.9, indicating that it might be less prone to overfitting.
+The effective number of parameters is a measure of model complexity, indicating how much the model has adapted to the data, as discussed by Kheiri, Kimber, and Reza Meshkani (2007). In our standard Bayesian Kringing model, this value was 383.7 with a standard error of 112.2. The alternative log model had a slightly lower effective number of parameters at 372.9 with a standard error of 111.9, indicating that it might be less prone to overfitting.
 
 The LOO information criterion(LOO-IC) combines the ELPD and the effective number of parameters to estimate the expected predictive error. A lower LOO-IC value indicates better performance. The standard Bayesian Kringing model produced a LOO-IC of 6078.3 with a standard error of 1133.6, while the alternative Bayesian Kringing model yielded a LOO-IC of 6057.7 with a standard error of 1130.6. The lower LOO-IC in the alternative model suggests it has slightly better predictive performance.
 
@@ -127,3 +125,16 @@ The importance of accounting for uncertainties in spatial modeling, showcasing t
 
 ## Appendix A
 * implementation code in the appendix (using Stan)
+
+## citation
+Kheiri, S., Kimber, A., & Reza Meshkani, M. (2007). Bayesian analysis of an inverse gaussian correlated frailty model. Computational Statistics &amp; Data Analysis, 51(11), 5317–5326. https://doi.org/10.1016/j.csda.2006.09.026
+
+Mooney, S. J., Bader, M. D., Lovasi, G. S., Neckerman, K. M., Rundle, A. G., & Teitler, J. O. (2018). Using universal kriging to improve neighborhood physical disorder measurement. Sociological Methods &amp; Research, 49(4), 1163–1185. https://doi.org/10.1177/0049124118769103
+
+Oelrich, O., & Villani, M. (2024, February 3). Modeling local predictive ability using power-transformed gaussian processes. arXiv.org. https://arxiv.org/abs/2402.02068
+
+Sam, W. (2018, July 13). Geostatistical modelling with R and Stan. The Academic Health Economists’ Blog. https://aheblog.com/2016/12/07/geostatistical-modelling-with-r-and-stan/
+
+Wieskotten, M., Crozet, M., Iooss, B., Lacaux, C., & Marrel, A. (2023). A comparison between Bayesian and ordinary Kriging based on validation criteria: Application to radiological characterisation. Mathematical Geosciences, 56(1), 143–168. https://doi.org/10.1007/s11004-023-10072-y
+
+Zhang, Z., & Du, Q. (2019). A Bayesian Kriging regression method to estimate air temperature using remote sensing data. Remote Sensing, 11(7), 767. https://doi.org/10.3390/rs11070767 
