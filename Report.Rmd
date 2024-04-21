@@ -106,6 +106,8 @@ These results indicate that the alternative log model has slightly better predic
 
 
 
+
+
 ##Discussion 
 - Modifiable Areal Unit Problem (MAUP) may come into play when grouping data
 
