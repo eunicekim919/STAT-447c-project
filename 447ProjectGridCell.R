@@ -31,29 +31,29 @@ test_data <- crime_data[-train_indices, ]
 
 
 
-fit = stan(file = 'geo_model.stan', 
-               data = list(N = nrow(train_data),
-                           x = train_data$X_Coord,
-                           y = train_data$Y_Coord,
-                           crimes = train_data$COUNT,
-                           N_new = nrow(test_data),
-                           x_new = test_data$X_Coord,
-                           y_new = test_data$Y_Coord),
-               chains = 1,
-               refresh = 0, 
-               iter = 2000)
+#fit = stan(file = 'geo_model.stan', 
+#               data = list(N = nrow(train_data),
+#                           x = train_data$X_Coord,
+#                           y = train_data$Y_Coord,
+#                           crimes = train_data$COUNT,
+#                           N_new = nrow(test_data),
+#                           x_new = test_data$X_Coord,
+#                           y_new = test_data$Y_Coord),
+#               chains = 1,
+#               refresh = 0, 
+#               iter = 2000)
 
-#fit = stan(file = 'bayes_geo_model.stan', 
-#           data = list(N = nrow(train_data),
-#                       x = train_data$X_Coord,
-#                       y = train_data$Y_Coord,
-#                       crimes = train_data$COUNT,
-#                       N_new = nrow(test_data),
-#                       x_new = test_data$X_Coord,
-#                       y_new = test_data$Y_Coord),
-#           chains = 1,
-#           refresh = 0, 
-#           iter = 2000)
+fit = stan(file = 'bayes_geo_model.stan', 
+           data = list(N = nrow(train_data),
+                       x = train_data$X_Coord,
+                       y = train_data$Y_Coord,
+                       crimes = train_data$COUNT,
+                       N_new = nrow(test_data),
+                       x_new = test_data$X_Coord,
+                       y_new = test_data$Y_Coord),
+           chains = 1,
+           refresh = 0, 
+           iter = 2000)
 
 
 samples = rstan::extract(fit)
