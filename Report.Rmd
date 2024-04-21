@@ -30,7 +30,7 @@ In our study, we explore two Spatial modeling techniques for crime prediction: U
 
 #### Universal Kringing Model 
 
-The Universal Kriging model employs a spatial covariance function to capture the similarity or correlation between crime counts at different locations. This function, typically a parametric decay function such as the exponential or Gaussian function, describes how spatial correlation diminishes with distance. Here, we utilize the exponential function, parameterized by the range parameter (\phi), to control the spatial structure of the model.
+The Universal Kriging model employs a spatial covariance function to capture the similarity or correlation between crime counts at different locations. This function, typically a parametric decay function such as the exponential or Gaussian function, describes how spatial correlation diminishes with distance. Here, we utilize the exponential function, parameterized by the range parameter ($\phi$), to control the spatial structure of the model.
 
 *REVISIT*
 $k(x_{ij}) = exp(-\phi d_{ij}) + \mathbb{1}_{i=j} \sigma^2$
@@ -60,17 +60,51 @@ Wiskotten et al. highlight that the Bayesian approach addresses that a common cr
 
 
 ##Methods 
+
 * Bayesian model is precisely described(using ~ notation)
 * Prior choice is motivated. If appropriate, several choices are compared or sensitivity analysis is performed. 
 * Critical evaluation of the posterior approximation. An appropriate combination of diagnostics, synthetic datasets and other validation strategies.
 
+
+We used Stan to code and sample from our model. 
+
+
+* NEED TO REVISIT THIS PART*
+Let $Y_i$ represent the crime count at location i, with a spatial relationship defined by a parametric covariance function. The model assumes a Gaussian process, with a mean function and covariance matrix. We use the exponential covariance function, which represents the spatial correlation between crime counts at different locations, with a parameter controlling the rate of decay.
+We provide the data and the neighbourhood, the location of the clusters,and the precise locations of longtitude and latitdue of all the points we want to predict. We also provide the matrix with the distance between all points both in the data and in the new locations. 
+
+The observation model is
+
+$Y_i ~ Poisson(\lambda_i)$
+
+where $\lambda$ is the expected crime count at location $i$. The spatial component is modeled using a Gaussian process, with hyperparameters specifying the covariance structure.
+
+#### Prior Choice
+
+In Bayesian analysis, we represents the initial belief about the model parameters to ensure the model is being robust. The following prior distributions are used for the parameters:
+
+* Length scale($\phi$): Controls the spatial correlation decay rate. 
+* Noise variance($\sigma^2$): Represents measurement noise. 
+* Intercept($\beta_0$): Represents the baseline crime rate. We used normal distribution with mean 0 and standard deviation 10 t provide flexibility in the baseline rate.
+
+To validate the model, we use a Leave-One-Out Cross-Validation (LOO-CV). This technique assess the model's predictive performance by leaving one observation out at a time and predicting its value using the rest of the data.
+
+
 ##Results 
+
+
 
 ##Discussion 
 - Modifiable Areal Unit Problem (MAUP) may come into play when grouping data
 
+### Posterior Approximation and Validation
+
+We use Markov Chain Monte Carlo (MCMC) to generate samples from the posterior distribution. We employ convergence diagnostics, such as R-hat statistics and trace plots, to ensure the MCMC chains converge. 
+
+
 ##Conclusion
 * key limitations
+
 
 In conclusion, our study demonstrates the effectiveness of Bayesian modeling techniques for crime prediction. Both Universal Kriging and Bayesian Kriging offer valuable insights into the spatial distribution of crimes and provide reliable predictions for law enforcement agencies and urban planners.
 
