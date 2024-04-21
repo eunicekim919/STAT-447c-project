@@ -9,8 +9,8 @@ library(magrittr)
 set.seed(123)  # For reproducibility
 
 crime_data <- read.csv("VanCrimeDataDensity.csv")
-crime_data[!crime_data$COUNT %in% boxplot.stats(crime_data$COUNT)$out, ]
-crime_data <- crime_data[-c(201:nrow(crime_data)),] #for now
+#crime_data[!crime_data$COUNT %in% boxplot.stats(crime_data$COUNT)$out, ]
+crime_data <- crime_data[-c(101:nrow(crime_data)),] #for now
 
 # Assuming crime_data is your dataframe
 ggplot(crime_data, aes(x = X_Coord, y = Y_Coord, fill = COUNT)) +
@@ -109,4 +109,5 @@ ggplot(comparison_data, aes(x = lon, y = lat)) +
   labs(title = "Comparison of Actual and Predicted Crime Counts",
        subtitle = paste("RMSE:", round(rmse, 2), "MAE:", round(mae, 2))) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none")+
+  coord_fixed(ratio = 1)
