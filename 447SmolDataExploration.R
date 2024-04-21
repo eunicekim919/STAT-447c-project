@@ -1,9 +1,11 @@
 ## General Data Exploration
 #install.packages(“ape”) 
 library(ape)
+library(geoR)
+library(dplyr)
 
-crime2022 <- read.csv("VanCrimeData2022.csv")
 crime2023 <- read.csv("VanCrimeData2023.csv")
+crime_data <- read.csv("VanCrimeDataDensity.csv")
 
 #almost the same amount of crime occurring each month
 hist(crime2022$MONTH)
@@ -13,5 +15,18 @@ hist(crime2022$MONTH)
 hist(crime2023$MONTH)
 
 #getting Moran I
-#I'm going to get it in R cuz this is taking forever LOL
+#I'm going to get it in R cuz this is taking forever
+crime2022 <- read.csv("VanCrimeData2022.csv")
+crime2022 <- na.omit(crime2022)
+crime2022 <- distinct(crime2022, .keep_all = TRUE)
+train_indices <- sample(nrow(crime2022), size = 0.8 * nrow(crime2022))
+train_data <- crime2022[train_indices, ]
+test_data <- crime2022[-train_indices, ]
 
+geocrime <- as.geodata(train_data, coords.col = 9:10, data.col = 5)
+geocrime <- jitterDupCoords(geocrime, 10)
+geocrimepred <- as.geodata(test_data, coords.col = 9:10, data.col = 5)
+
+model <- krige.conv(geocrime, locations = geocrimepred$coords)
+
+image(bayesmodel, locations = geocrimepred$coords)
