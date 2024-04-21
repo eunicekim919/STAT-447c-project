@@ -102,8 +102,11 @@ The LOO information criterion(LOO-IC) combines the ELPD and the effective number
 
 These results indicate that the alternative log model has slightly better predictive accuracy and lower complexity compared to the standard Bayesian Kriging model. However, the two model has a very close performance comparison. To further evaluate the models, we plan to compare the Universal Kriging and Bayesian models using the log transformation to see which approach provides more robust predictions.
 
+Our Bayesian Kriging log model has an ELPD estimate of -3028.9 with a standard error of 565.3, indicating some variability in the predictions. The Universal Kriging log model has an lower ELPD estimate of -427.1 with a smaller standard error of 31.3. This indicates that the Universal Kriging log model may have better predictive performance compared to the Bayesian Kriging log model, as it shows a higher ELPD estimate and a lower standard error, signifying potentially more reliable predictions with less variability.
 
+The Bayesian Kriging log model had an effective number of parameters was 372.9 with a standard error of 111.9. The Universal Kriging log model had a lower effective number of parameters at 204.0 with a standard error of 25.4. It indicates that the Universal Kriging log model is less complex and potentially less prone to overfitting.
 
+The Bayesian Kriging log model produced a LOO-IC of 6057.7 with a standard error of 1130.6 while the Universal Kriging log model had a lower LOO-IC of 854.1 with a smaller standard error of 62.6. This indicates that the Universal Kriging log model performs better in terms of predictive performance.
 
 
 ##Discussion 
