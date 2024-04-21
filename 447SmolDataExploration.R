@@ -18,15 +18,13 @@ hist(crime2023$MONTH)
 #I'm going to get it in R cuz this is taking forever
 crime2022 <- read.csv("VanCrimeData2022.csv")
 crime2022 <- na.omit(crime2022)
-crime2022 <- distinct(crime2022, .keep_all = TRUE)
 train_indices <- sample(nrow(crime2022), size = 0.8 * nrow(crime2022))
 train_data <- crime2022[train_indices, ]
 test_data <- crime2022[-train_indices, ]
 
 geocrime <- as.geodata(train_data, coords.col = 9:10, data.col = 5)
-geocrime <- jitterDupCoords(geocrime, 10)
 geocrimepred <- as.geodata(test_data, coords.col = 9:10, data.col = 5)
 
-model <- krige.conv(geocrime, locations = geocrimepred$coords)
+model <- krige.bayes(geocrime, locations = geocrimepred$coords)
 
 image(bayesmodel, locations = geocrimepred$coords)
