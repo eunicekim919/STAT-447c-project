@@ -204,7 +204,7 @@ fit = sampling(geo_model_loo,
                iter = 2000)
 ```
 
-```{r}
+```{r geo_model_loo_standard}
 log_lik_1 <- extract_log_lik(fit, merge_chains = FALSE)
 r_eff <- relative_eff(exp(log_lik_1), cores = 2)
 loo_1 <- loo(log_lik_1, r_eff, cores = 2)
@@ -221,7 +221,7 @@ standata_2$y_new <- log(standata$y_new)
 standata_2$crimes <- log(standata$crimes)
 ```
 
-```{r}
+```{r geo_model_loo_log}
 fit_2 <- stan(fit = fit, 
               data = standata,
               chains = 1, 
@@ -381,7 +381,7 @@ fit = sampling(bayes_geo_model_loo,
                iter = 2000)
 ```
 
-```{r}
+```{r bayes_geo_model_loo_standard}
 log_lik_1 <- extract_log_lik(fit, merge_chains = FALSE)
 r_eff <- relative_eff(exp(log_lik_1), cores = 2)
 loo_1 <- loo(log_lik_1, r_eff, cores = 2)
@@ -398,7 +398,7 @@ standata_2$y_new <- log(standata$y_new)
 standata_2$crimes <- log(standata$crimes)
 ```
 
-```{r}
+```{r bayes_geo_model_loo_log}
 fit_2 <- stan(fit = fit, 
               data = standata,
               chains = 1, 
