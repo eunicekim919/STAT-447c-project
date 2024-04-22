@@ -125,6 +125,13 @@ The Bayesian Kriging log model had an effective number of parameters was 372.9 w
 The Bayesian Kriging log model produced a LOO-IC of 6057.7 with a standard error of 1130.6 while the Universal Kriging log model had a lower LOO-IC of 854.1 with a smaller standard error of 62.6. This indicates that the Universal Kriging log model performs better in terms of predictive performance.
 
 ## Conclusion
+* key limitations
+
+In conclusion, our study demonstrates comparisons of the effectiveness of Bayesian Kriging modeling techniques and Universal Kriging modeling for crime prediction. Both Universal Kriging and Bayesian Kriging offer valuable insights into the spatial distribution of crimes and provide reliable predictions for law enforcement agencies and urban planners. We found that the Universal Kriging modeling performs better with our model since ??. 
+
+One key limitation of our study is the assumption of stationary in the spatial processes. The assumption of mean, variance and autocorrelation structure do not change over time is not always true for the real world scenarios. Additionally, the choice of priors and hyperparameters may influence the model's performance and generalization ability.
+
+The importance of accounting for uncertainties in spatial modeling, showcasing the relevance of Bayesian methods in such applications.
 
 ## Appendix A
 * implementation code in the appendix (using Stan)
