@@ -1,5 +1,5 @@
 ---
-title: "A Hierarchical(Kriging) Bayesian Model vs A Hierarchical(Kriging) Model with R and Stan"
+title: "Kriging In Stan: Comparison of Spatial Interpolation Models on Crime in Vancouver"
 author: "Zelalem Araya (92797935) & Youjung Kim (3876269)"
 date: "2024-04-21"
 output: pdf_document
