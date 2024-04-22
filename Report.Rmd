@@ -12,8 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Working link to a public repo:
 https://github.com/eunicekim919/STAT-447c-project.git
 
-## Contributions of each team member:
-
 ## Introduction (Problem formulation)
 In recent years, densely populated regions worldwide have experienced fluctuating crime rates due to various economic and environmental factors such as income, job availability, and climate. Historically, Vancouver has consistently had higher than expected about its population size and the average Canadian crime rate, including higher rates of violent crime. (Andresen, 2017; Statistics Canada, 2023) These rising crime rates prompt concerns about public safety, and how to appropriately allocate resources to adequately deal with issues unique to each area. Effective spatial analysis of crime data is crucial for understanding these patterns, predicting future occurrences, and implementing the right preventative measures. When reports are only available for certain regions, being able to interpolate available data spatially could provide important information without needing to expend unnecessary resources. Among the various statistical techniques, kriging offers a robust method of spatial interpolation using Bayesian optimization over a Gaussian process.
 
@@ -145,6 +143,19 @@ In conclusion, our study demonstrates a comparative analysis of two different Kr
 One significant limitation of our study is the assumption of stationary in spatial processes. Real-word scenarios often exhibit non-stationary behavior, where mean, variance, and autocorrelation structures may vary over time or space. Additionally, the choice of priors and hyperparameters can influence model performance and generalization ability. Exploring alternative Kriging models such as ordinary Kriging, or optimizing model parameters could potentially yield improved results. Another potential limitation was the lack of other variables considered in our analysis. Mentioned previously, no temporal input was included into our interpolation models based on the preliminary analysis that showed crime density was relatively even in each month. Future research could include other factors such as reported time of day or even aspatial and non-temporal factors such as type of crime could have created a better informed hierarchical model, however were omitted due to its complexity in novel spatial interpolation analysis. It is also important to consider that the data were are using is sourced solely from crime reports, which have been known to contain biases based on location and other factors and may not fully represent crime occurrences. (Westin, 2021) 
 
 Our study holds significance as it bridges the gap between theoretical modeling techniques and practical applications in crime prediction, offering insights into the effectiveness of Bayesian and Universal Kriging models. Our findings underscore the importance of robust spatial modeling approaches in addressing complex real-world challenges, emphasizing the need for informed decision-making in crime management and urban development initiatives.
+
+## Contributions of each team member:
+Choice Data/Data preprocessing: Zela, Youjung
+Universal Kriging Model: Zela
+Bayesian Kriging model: Zela
+LOO-CV Model Adaptations: Youjung
+Log Model Adaptations: Youjung
+Model Fitting: Zela
+Results Interpretation: Zela(rmse, plots), Youjung(loo)
+Writing project paper
+Intro/background/results: Youjung
+Methodology/Exploration: Zela
+Conclusion:Zela, Youjung
 
 ## Appendix A
 * implementation code in the appendix (using Stan)
