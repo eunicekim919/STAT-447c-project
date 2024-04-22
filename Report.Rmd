@@ -161,6 +161,8 @@ One significant limitation of our study is the assumption of stationary in spati
 
 Our study holds significance as it bridges the gap between theoretical modeling techniques and practical applications in crime prediction, offering insights into the effectiveness of Bayesian and Universal Kriging models. Our findings underscore the importance of robust spatial modeling approaches in addressing complex real-world challenges, emphasizing the need for informed decision-making in crime management and urban development initiatives.
 
+\newpage 
+
 ## Contributions of each team member:
 Choice Data/Data preprocessing: Zela, Youjung
 
@@ -183,7 +185,492 @@ Methodology/Exploration: Zela
 Conclusion:Zela, Youjung
 
 ## Appendix A
-* implementation code in the appendix (using Stan)
+
+```{r}
+library(ggplot2)
+library(sf)
+library(dplyr)
+library(rstan)
+library(tidybayes)
+library(magrittr)
+library(loo)
+```
+
+```{r}
+#all the data things
+set.seed(123)  # For reproducibility
+
+crime_data <- read.csv("CrimeDensity2023fixed2.csv")
+crime_data <- crime_data[-c(201:nrow(crime_data)),] #for now
+crime_data$COUNT <- crime_data$Point_Count
+head(crime_data)
+```
+
+```{r}
+library(readr)
+#crime_data <- read_csv("~/Downloads/crime_records.csv")
+```
+
+
+```{r}
+# missing data exmination
+sum(is.na(crime_data$NEIGHBOURHOOD))
+```
+
+```{r}
+# crime counts by year
+# ggplot(data = crime_data, aes(x = YEAR)) + 
+#   geom_bar() +
+#   facet_wrap(~NEIGHBOURHOOD, ncol = 5) 
+```
+
+
+```{r}
+# Assuming crime_data is your dataframe
+ggplot(crime_data, aes(x = X_Coord, y = Y_Coord, fill = COUNT)) +
+  geom_tile() +  # creates the grid cells
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "Crime Density in Vancouver", fill = "Number of Crimes")+
+  coord_fixed(ratio = 1)  # keeps the aspect ratio of 1:1
+```
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Sample 80% of the data to keep
+train_indices <- sample(nrow(crime_data), size = 0.8 * nrow(crime_data))
+train_data <- crime_data[train_indices, ]
+test_data <- crime_data[-train_indices, ]
+```
+
+### Spatial Model
+
+```{stan output.var = "geo_model"}
+data {
+  int<lower=0> N; // number of data points (train)
+  vector[N] x; // long of train
+  vector[N] y; // lat of train
+  vector[N] crimes; // count of train
+  
+  int<lower=0> N_new; // number of data points (test)
+  vector[N_new] x_new; // long of test
+  vector[N_new] y_new; //lat of test
+}
+
+parameters {
+  real alpha; //intercept
+  real<lower=0> rho; //range
+  real<lower=0> sigma; //spatial variance
+  real<lower=0> sigma_err; // measurement error
+}
+
+model {
+  vector[N] mu;
+  
+  for (i in 1:N) {
+    mu[i] = alpha;
+  }
+  
+  // Priors
+  alpha ~ normal(0, 10);
+  rho ~ inv_gamma(5, 5);
+  sigma ~ normal(0, 1);
+  sigma_err ~ normal(0, 1);
+
+  // Spatial structure
+  {
+    matrix[N, N] dist;
+    for (i in 1:N) {
+      for (j in 1:N) {
+        dist[i, j] = sqrt(square(x[i] - x[j]) + square(y[i] - y[j]));
+      }
+    }
+    crimes ~ multi_normal(mu, sigma * exp(-dist/rho) + diag_matrix(rep_vector(sigma_err, N)));
+  }
+}
+
+generated quantities{
+  vector[N_new] pred_crimes; //predicted crimes
+  matrix[N, N_new] new_dist; //distance from old to new
+  for (i in 1:N){
+    for (j in 1:N_new){
+      new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+    }
+  }
+  
+  for (i in 1:N_new){
+    pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
+  }
+}
+```
+
+### Spatial Model with loocv
+
+```{stan output.var = "geo_model_loo"}
+data {
+  int<lower=0> N; // number of data points (train)
+  vector[N] x; // long of train
+  vector[N] y; // lat of train
+  vector[N] crimes; // count of train
+  
+  int<lower=0> N_new; // number of data points (test)
+  vector[N_new] x_new; // long of test
+  vector[N_new] y_new; //lat of test
+}
+
+parameters {
+  real alpha; //intercept
+  real<lower=0> rho; //range
+  real<lower=0> sigma; //spatial variance
+  real<lower=0> sigma_err; // measurement error
+}
+
+model {
+  vector[N] mu;
+  
+  for (i in 1:N) {
+    mu[i] = alpha;
+  }
+  
+  // Priors
+  alpha ~ normal(0, 10);
+  rho ~ inv_gamma(5, 5);
+  sigma ~ normal(0, 1);
+  sigma_err ~ normal(0, 1);
+
+  // Spatial structure
+  {
+    matrix[N, N] dist;
+    for (i in 1:N) {
+      for (j in 1:N) {
+        dist[i, j] = sqrt(square(x[i] - x[j]) + square(y[i] - y[j]));
+      }
+    }
+    crimes ~ multi_normal(mu, sigma * exp(-dist/rho) + diag_matrix(rep_vector(sigma_err, N)));
+  }
+}
+
+generated quantities{
+  vector[N_new] log_lik; 
+  vector[N_new] pred_crimes; //predicted crimes
+  matrix[N, N_new] new_dist; //distance from old to new
+  for (i in 1:N){
+    for (j in 1:N_new){
+      new_dist[i, j] = exp(-sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j])) / rho);
+    }
+  }
+  
+  for (i in 1:N_new){
+    pred_crimes[i] = normal_rng(alpha + dot_product(new_dist[, i], crimes - rep_vector(alpha, N)), sigma_err);
+    log_lik[i] = normal_lpdf(crimes[i] | pred_crimes[i], sigma_err);
+  }
+}
+ 
+```
+
+### Fit Spatial Model with loocv
+
+```{r}
+standata <- list(N = nrow(train_data),
+                           x = train_data$X_Coord,
+                           y = train_data$Y_Coord,
+                           crimes = train_data$COUNT,
+                           N_new = nrow(test_data),
+                           x_new = test_data$X_Coord,
+                           y_new = test_data$Y_Coord)
+fit = sampling(geo_model_loo, 
+               data = standata,
+               chains = 1,
+               refresh = 0, 
+               iter = 2000)
+```
+
+```{r geo_model_loo_standard}
+log_lik_1 <- extract_log_lik(fit, merge_chains = FALSE)
+r_eff <- relative_eff(exp(log_lik_1), cores = 2)
+loo_1 <- loo(log_lik_1, r_eff, cores = 2)
+print(loo_1)
+```
+
+```{r}
+# Compare this model to log matrix
+standata_2 <- standata
+standata_2$x <- log(standata$x)
+standata_2$y <- log(standata$y)
+standata_2$x_new <- log(standata$x_new)
+standata_2$y_new <- log(standata$y_new)
+standata_2$crimes <- log(standata$crimes)
+```
+
+```{r geo_model_loo_log}
+fit_2 <- stan(fit = fit, 
+              data = standata,
+              chains = 1, 
+              refresh = 0)
+log_lik_2 <- extract_log_lik(fit_2, merge_chains = FALSE)
+r_eff_2 <- relative_eff(exp(log_lik_2))
+loo_2 <- loo(log_lik_2, r_eff = r_eff_2, cores = 2)
+print(loo_2)
+```
+
+```{r}
+diff <- loo_compare(loo_1, loo_2)
+print(diff)
+```
+
+```{r}
+samples = rstan::extract(fit)
+
+predicted_crimes <- samples$pred_crimes
+
+mean_predicted_crimes <- apply(predicted_crimes, 2, mean)
+
+predicted_data <- data.frame(lon = test_data$X_Coord,
+                             lat = test_data$Y_Coord,
+                             crime_count = mean_predicted_crimes)
+```
+
+```{r}
+train <- data.frame(
+  lon = train_data$X_Coord,
+  lat = train_data$Y_Coord,
+  crime_count = train_data$COUNT
+)
+
+# Combine both datasets
+full_data <- rbind(
+  train[, c("lon", "lat", "crime_count")],
+  predicted_data[, c("lon", "lat", "crime_count")]
+)
+
+full_data <- na.omit(full_data)
+```
+
+```{r}
+ggplot(full_data, aes(x = lon, y = lat, fill = crime_count)) +
+  geom_tile() + 
+  scale_fill_gradient(low = "blue", high = "red")+
+  coord_fixed(ratio = 1)
+
+traceplot(fit, pars = c("alpha", "rho", "sigma", "sigma_err"))
+```
+
+```{r}
+
+# Calculate RMSE
+rmse <- sqrt(mean((predicted_data$crime_count - test_data$COUNT)^2))
+# Calculate MAE
+mae <- mean(abs(predicted_data$crime_count - test_data$COUNT))
+
+# Print the metrics
+print(paste("Root Mean Squared Error:", rmse))
+print(paste("Mean Absolute Error:", mae))
+
+```
+```{r}
+# Combine test data and predicted data for plotting
+comparison_data <- cbind(test_data, predicted_data)
+
+ggplot(comparison_data, aes(x = lon, y = lat)) +
+  geom_tile(aes(fill = COUNT), alpha = 0.5) +  # Actual counts
+  geom_tile(aes(fill = crime_count), color = "grey", alpha = 0.5) +  # Predicted counts
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "Comparison of Actual and Predicted Crime Counts",
+       subtitle = paste("RMSE:", round(rmse, 2), "MAE:", round(mae, 2))) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+## Bayesian Spatial Model with loocv
+
+```{stan output.var = "bayes_geo_model_loo"}
+data {
+  int<lower=0> N; // number of data points (train)
+  vector[N] x; // longitude of train data
+  vector[N] y; // latitude of train data
+  vector[N] crimes; // crime count of train data
+
+  int<lower=0> N_new; // number of data points (test)
+  vector[N_new] x_new; // longitude of test data
+  vector[N_new] y_new; // latitude of test data
+}
+
+parameters {
+  real<lower=0> rho;
+  real<lower=0> sigma; // scale of the output
+  real<lower=0> sigma_err; // noise level
+}
+
+transformed parameters {
+  matrix[N, N] covar_matrix;
+  for (i in 1:N) {
+    for (j in i:N) {
+      real dist = sqrt(square(x[i] - x[j]) + square(y[i] - y[j]));
+      covar_matrix[i, j] = sigma * exp(-dist / rho);
+      if (i != j) {
+        covar_matrix[j, i] = covar_matrix[i, j]; // Symmetric matrix
+      }
+    }
+    covar_matrix[i, i] += sigma_err^2; // adding noise variance to the diagonal
+  }
+}
+
+model {
+  // Priors
+  rho ~ inv_gamma(5, 5);
+  sigma ~ normal(0, 1);
+  sigma_err ~ normal(0, 0.1);
+
+  // Likelihood
+  crimes ~ multi_normal_cholesky(rep_vector(0, N), cholesky_decompose(covar_matrix));
+}
+
+generated quantities {
+  vector[N_new] log_lik; 
+  vector[N_new] pred_crimes; // predicted crimes
+  matrix[N, N_new] new_dist; // distance from old to new
+
+  // Compute distances for the new matrix
+  for (i in 1:N) {
+    for (j in 1:N_new) {
+      new_dist[i, j] = sqrt(square(x[i] - x_new[j]) + square(y[i] - y_new[j]));
+    }
+  }
+
+  // Covariance matrix between train and test data
+  matrix[N, N_new] k_x_xnew;
+  for (i in 1:N) {
+    for (j in 1:N_new) {
+      k_x_xnew[i, j] = sigma * exp(-new_dist[i, j] / rho);
+    }
+  }
+
+  // Prediction mean
+  matrix[N_new, N] k_xnew_x = k_x_xnew'; // Transpose
+  vector[N] alpha = cholesky_decompose(covar_matrix) \ crimes; // Cholesky factorization and solve
+  pred_crimes = k_xnew_x * alpha + mean(crimes);
+  
+  // cross val
+  for (i in 1:N_new){
+    log_lik[i] = normal_lpdf(crimes[i] | pred_crimes[i], sigma_err);
+  }
+}
+
+```
+
+## Fit Bayesian Spatial Model with loocv
+
+```{r}
+standata <- list(N = nrow(train_data),
+                           x = train_data$X_Coord,
+                           y = train_data$Y_Coord,
+                           crimes = train_data$COUNT,
+                           N_new = nrow(test_data),
+                           x_new = test_data$X_Coord,
+                           y_new = test_data$Y_Coord)
+fit = sampling(bayes_geo_model_loo, 
+               data = standata,
+               chains = 1,
+               refresh = 0, 
+               iter = 2000)
+```
+
+```{r bayes_geo_model_loo_standard}
+log_lik_1 <- extract_log_lik(fit, merge_chains = FALSE)
+r_eff <- relative_eff(exp(log_lik_1), cores = 2)
+loo_1 <- loo(log_lik_1, r_eff, cores = 2)
+print(loo_1)
+```
+
+```{r}
+# Compare this model to log matrix
+standata_2 <- standata
+standata_2$x <- log(standata$x)
+standata_2$y <- log(standata$y)
+standata_2$x_new <- log(standata$x_new)
+standata_2$y_new <- log(standata$y_new)
+standata_2$crimes <- log(standata$crimes)
+```
+
+```{r bayes_geo_model_loo_log}
+fit_2 <- stan(fit = fit, 
+              data = standata,
+              chains = 1, 
+              refresh = 0)
+log_lik_2 <- extract_log_lik(fit_2, merge_chains = FALSE)
+r_eff_2 <- relative_eff(exp(log_lik_2))
+loo_2 <- loo(log_lik_2, r_eff = r_eff_2, cores = 2)
+print(loo_2)
+```
+
+```{r}
+diff <- loo_compare(loo_1, loo_2)
+print(diff)
+```
+
+```{r}
+samples = rstan::extract(fit)
+
+predicted_crimes <- samples$pred_crimes
+
+mean_predicted_crimes <- apply(predicted_crimes, 2, mean)
+
+predicted_data <- data.frame(lon = test_data$X_Coord,
+                             lat = test_data$Y_Coord,
+                             crime_count = mean_predicted_crimes)
+```
+
+```{r}
+train <- data.frame(
+  lon = train_data$X_Coord,
+  lat = train_data$Y_Coord,
+  crime_count = train_data$COUNT
+)
+
+# Combine both datasets
+full_data <- rbind(
+  train[, c("lon", "lat", "crime_count")],
+  predicted_data[, c("lon", "lat", "crime_count")]
+)
+
+full_data <- na.omit(full_data)
+```
+
+```{r}
+ggplot(full_data, aes(x = lon, y = lat, fill = crime_count)) +
+  geom_tile() + 
+  scale_fill_gradient(low = "blue", high = "red")+
+  coord_fixed(ratio = 1)
+
+traceplot(fit, pars = c("rho", "sigma", "sigma_err"))
+```
+
+```{r}
+# Calculate RMSE
+rmse <- sqrt(mean((predicted_data$crime_count - test_data$COUNT)^2))
+# Calculate MAE
+mae <- mean(abs(predicted_data$crime_count - test_data$COUNT))
+
+# Print the metrics
+print(paste("Root Mean Squared Error:", rmse))
+print(paste("Mean Absolute Error:", mae))
+```
+
+```{r}
+# Combine test data and predicted data for plotting
+comparison_data <- cbind(test_data, predicted_data)
+
+ggplot(comparison_data, aes(x = lon, y = lat)) +
+  geom_tile(aes(fill = COUNT), alpha = 0.5) +  # Actual counts
+  geom_tile(aes(fill = crime_count), color = "grey", alpha = 0.5) +  # Predicted counts
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "Comparison of Actual and Predicted Crime Counts",
+       subtitle = paste("RMSE:", round(rmse, 2), "MAE:", round(mae, 2))) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
 
 ## References
 
