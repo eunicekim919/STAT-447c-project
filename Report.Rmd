@@ -105,27 +105,31 @@ In both models, the parameters are given the same priors for their equivalent va
 
 The results from the 'loo' function provide estimates for the expected log predictive density(ELPD), the effective number of parameters and the Leave-One-Out(LOO) information criterion. These metrics offer insights into each of two different model's predictive accuracy and complexity. We used these metrics to compare to Model 1 and Model 2, examining which method would yield better predictive performance. 
 
-We built two different Kriging models with Stan: one using the original data (standard model) and another using the logarithmic transformation (log model). To determine which model have better predictive performance, we employed the 'loo_compare' function to evaluate the fit of the models.The decision between the standard model and the log model allows us to find the suitable model to compare two Kriging models. 
-
-The Expected Log Predictive Density (ELPD) is a measure of the model's predictive performance, as it serves as a theoretically motivated metric for evaluating predictive ability (Oelrich & Villani, 2024). A higher ELPD suggest better predictive accuracy. Our standard Bayesian Kriging model had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The alternative log model using Bayesian Kriging showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
+We built two different Kriging models with Stan for both Model 1 and Model 2 to compare results: one using the original data (standard model) and another using the logarithmic transformation (log model). To determine which model have better predictive performance, we employed the 'loo_compare' function to evaluate the fit of the models.The decision between the standard model and the log model allows us to find the suitable model to compare two Kriging models. 
 
 !!! Put the screenshot of bayesian loo results !!!
+![Bayesian Kringing LOO-CV Standard Model](path-to-image-here)
+![Bayesian Kringing LOO-CV log Model](path-to-image-here)
 
-The effective number of parameters is a measure of model complexity, indicating how much the model has adapted to the data, as discussed by Kheiri, Kimber, and Reza Meshkani (2007). In our standard Bayesian Kriging model, this value was 383.7 with a standard error of 112.2. The alternative log model had a slightly lower effective number of parameters at 372.9 with a standard error of 111.9, indicating that it might be less prone to overfitting.
+The above figures shows that the results for Standard Model 2 and Log Model 2. The Expected Log Predictive Density (ELPD) is a measure of the model's predictive performance, as it serves as a theoretically motivated metric for evaluating predictive ability (Oelrich & Villani, 2024). A higher ELPD suggest better predictive accuracy. Our standard Model 2 had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The log model using Model 2 showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
 
-The LOO information criterion(LOO-IC) combines the ELPD and the effective number of parameters to estimate the expected predictive error. A lower LOO-IC value indicates better performance. The standard Bayesian Kriging model produced a LOO-IC of 6078.3 with a standard error of 1133.6, while the alternative Bayesian Kriging model yielded a LOO-IC of 6057.7 with a standard error of 1130.6. The lower LOO-IC in the alternative model suggests it has slightly better predictive performance.
+The effective number of parameters is a measure of model complexity, indicating how much the model has adapted to the data, as discussed by Kheiri, Kimber, and Reza Meshkani (2007). In our standard Model 2, this value was 383.7 with a standard error of 112.2. The alternative log model had a slightly lower effective number of parameters at 372.9 with a standard error of 111.9, indicating that it might be less prone to overfitting.
 
-These results indicate that the alternative log model has slightly better predictive accuracy and lower complexity compared to the standard Bayesian Kriging model. However, the two model has a very close performance comparison. 
+The LOO information criterion(LOO-IC) combines the ELPD and the effective number of parameters to estimate the expected predictive error. A lower LOO-IC value indicates better performance. The standard Model 2 produced a LOO-IC of 6078.3 with a standard error of 1133.6, while the log Model 2 yielded a LOO-IC of 6057.7 with a standard error of 1130.6. The lower LOO-IC in the log MOdel 2 suggests it has slightly better predictive performance.
+
+These results indicate that the log model has slightly better predictive accuracy and lower complexity compared to the standard Bayesian Kriging model. However, the two model shows a very close performance comparison in Bayesian model. 
 
 !!! (Universal Kriging standard model, Universal Kriging log model screenshots)!!!
+![Universal Kringing LOO-CV Standard Model](path-to-image-here)
+![Universal Kringing LOO-CV Log Model](path-to-image-here)
 
-It is clearer when you look at the results of the Universal Kriging standard model and Universal Kriging log model. Therefore, to further evaluate the models, we plan to compare the Universal Kriging and Bayesian models using the log transformation to see which approach provides more robust predictions.
+It is clearer when we look at the results of the Universal Kriging model that the log model generally performs better than the standard model. The figures above shows the performance for each of Standard Model 1 and Log Model 1. Therefore, to further evaluate the models, we plan to compare the Universal Kriging Model and Bayesian Kriging Model using the log transformation to see which approach provides more robust predictions.
 
-Our Bayesian Kriging log model has an ELPD estimate of -3028.9 with a standard error of 565.3, indicating some variability in the predictions. The Universal Kriging log model has an lower ELPD estimate of -427.1 with a smaller standard error of 31.3. This indicates that the Universal Kriging log model may have better predictive performance compared to the Bayesian Kriging log model, as it shows a higher ELPD estimate and a lower standard error, signifying potentially more reliable predictions with less variability.
+As the figures above indicates, our Model 2(from now I am assuming that models are log models) has an ELPD estimate of -3028.9 with a standard error of 565.3, indicating some variability in the predictions. The Model 1 has an lower ELPD estimate of -427.1 with a smaller standard error of 31.3. This indicates that the Model 1 may have better predictive performance compared to Model 2, as it shows a higher ELPD estimate and a lower standard error, signifying potentially more reliable predictions with less variability.
 
-The Bayesian Kriging log model had an effective number of parameters was 372.9 with a standard error of 111.9. The Universal Kriging log model had a lower effective number of parameters at 204.0 with a standard error of 25.4. It indicates that the Universal Kriging log model is less complex and potentially less prone to overfitting.
+The Model 2 had an effective number of parameters was 372.9 with a standard error of 111.9. The Model 1 had a lower effective number of parameters at 204.0 with a standard error of 25.4. It indicates that the Model 1 is less complex and potentially less prone to overfitting.
 
-The Bayesian Kriging log model produced a LOO-IC of 6057.7 with a standard error of 1130.6 while the Universal Kriging log model had a lower LOO-IC of 854.1 with a smaller standard error of 62.6. This indicates that the Universal Kriging log model performs better in terms of predictive performance.
+The Model 2 produced a LOO-IC of 6057.7 with a standard error of 1130.6 while the Model 1 had a lower LOO-IC of 854.1 with a smaller standard error of 62.6. This indicates that the Model 1 performs better in terms of predictive performance.
 
 ## Conclusion
 
