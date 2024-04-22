@@ -102,19 +102,22 @@ Model 2 simplifies the spatial structure by directly estimating a zero-mean mult
 In both models, the parameters are given the same priors for their equivalent variables to compare the nature of the models rather than the parameters themselves. An inverse gamma prior for `rho` was selected since we expect a level of spatial continuity, and the longer tail was to accommodate the possibility of significant spatial dependence, as the Global Moran’s Index on this data showed high autocorrelation. The normal priors for `sigma` and `sigma_err` assume most variability near the mean, reflecting the uncertainty we had about our assumption. The broad normal prior `alpha` in Model 1 was to accommodate different baseline densities. While there is a distinct lack of use of kriging in other research related to the spatial interpolation of similar crime data, these priors are common choices in other fields when conducting kriging. (Wiskotten et al. 2023;)
 
 ## Results
-The results from the 'loo' function provide estimates for the expected log predictive density(ELPD), the effective number of parameters and the Leave-One-Out(LOO) information criterion. These metrics offer insights into each of two different model's predictive accuracy and complexity. We used these metrics to compare the Universal Kriging and Bayesian Kriging models, examining which method would yield better predictive performance. 
 
-We built two different Bayesian Kriging models to compare: one using the original data(standard model) and another using the logarithmic transformation(log model). To determine which model have better predictive performance, we employed the 'loo_compare' function to evaluate the fit of the models.The decision between the standard model and the log model allows us to find the suitable model to compare two Kriging models. 
+The results from the 'loo' function provide estimates for the expected log predictive density(ELPD), the effective number of parameters and the Leave-One-Out(LOO) information criterion. These metrics offer insights into each of two different model's predictive accuracy and complexity. We used these metrics to compare to Model 1 and Model 2, examining which method would yield better predictive performance. 
 
-The Expected Log Predictive Density (ELPD) is a measure of the model's predictive performance, as it serves as a theoretically motivated metric for evaluating predictive ability (Oelrich & Villani, 2024). A higher ELPD suggest better predictive accuracy. Our standard Bayesian Kringing model had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The alternative log model using Bayesian Kringing showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
-Put the screenshot of bayesian loo results
-The effective number of parameters is a measure of model complexity, indicating how much the model has adapted to the data, as discussed by Kheiri, Kimber, and Reza Meshkani (2007). In our standard Bayesian Kringing model, this value was 383.7 with a standard error of 112.2. The alternative log model had a slightly lower effective number of parameters at 372.9 with a standard error of 111.9, indicating that it might be less prone to overfitting.
+We built two different Kriging models with Stan: one using the original data (standard model) and another using the logarithmic transformation (log model). To determine which model have better predictive performance, we employed the 'loo_compare' function to evaluate the fit of the models.The decision between the standard model and the log model allows us to find the suitable model to compare two Kriging models. 
 
-The LOO information criterion(LOO-IC) combines the ELPD and the effective number of parameters to estimate the expected predictive error. A lower LOO-IC value indicates better performance. The standard Bayesian Kringing model produced a LOO-IC of 6078.3 with a standard error of 1133.6, while the alternative Bayesian Kringing model yielded a LOO-IC of 6057.7 with a standard error of 1130.6. The lower LOO-IC in the alternative model suggests it has slightly better predictive performance.
+The Expected Log Predictive Density (ELPD) is a measure of the model's predictive performance, as it serves as a theoretically motivated metric for evaluating predictive ability (Oelrich & Villani, 2024). A higher ELPD suggest better predictive accuracy. Our standard Bayesian Kriging model had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The alternative log model using Bayesian Kriging showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
+
+!!! Put the screenshot of bayesian loo results !!!
+
+The effective number of parameters is a measure of model complexity, indicating how much the model has adapted to the data, as discussed by Kheiri, Kimber, and Reza Meshkani (2007). In our standard Bayesian Kriging model, this value was 383.7 with a standard error of 112.2. The alternative log model had a slightly lower effective number of parameters at 372.9 with a standard error of 111.9, indicating that it might be less prone to overfitting.
+
+The LOO information criterion(LOO-IC) combines the ELPD and the effective number of parameters to estimate the expected predictive error. A lower LOO-IC value indicates better performance. The standard Bayesian Kriging model produced a LOO-IC of 6078.3 with a standard error of 1133.6, while the alternative Bayesian Kriging model yielded a LOO-IC of 6057.7 with a standard error of 1130.6. The lower LOO-IC in the alternative model suggests it has slightly better predictive performance.
 
 These results indicate that the alternative log model has slightly better predictive accuracy and lower complexity compared to the standard Bayesian Kriging model. However, the two model has a very close performance comparison. 
 
-(Universal Kriging standard model, Universal Kriging log model screenshots)
+!!! (Universal Kriging standard model, Universal Kriging log model screenshots)!!!
 
 It is clearer when you look at the results of the Universal Kriging standard model and Universal Kriging log model. Therefore, to further evaluate the models, we plan to compare the Universal Kriging and Bayesian models using the log transformation to see which approach provides more robust predictions.
 
@@ -125,7 +128,6 @@ The Bayesian Kriging log model had an effective number of parameters was 372.9 w
 The Bayesian Kriging log model produced a LOO-IC of 6057.7 with a standard error of 1130.6 while the Universal Kriging log model had a lower LOO-IC of 854.1 with a smaller standard error of 62.6. This indicates that the Universal Kriging log model performs better in terms of predictive performance.
 
 ## Conclusion
-* key limitations
 
 In conclusion, our study demonstrates a comparative analysis of Bayesian Kriging and Universal Kriging models for crime prediction, revealing the strengths and limiations of each approach. We found that the Universal Kriging model outperformed the Bayesian Kringing model in our study using leave on out cross validation, although the exact reason for this performance difference requires further invesetigation.
 
