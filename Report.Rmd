@@ -127,11 +127,11 @@ The Bayesian Kriging log model produced a LOO-IC of 6057.7 with a standard error
 ## Conclusion
 * key limitations
 
-In conclusion, our study demonstrates comparisons of the effectiveness of Bayesian Kriging modeling techniques and Universal Kriging modeling for crime prediction. Both Universal Kriging and Bayesian Kriging offer valuable insights into the spatial distribution of crimes and provide reliable predictions for law enforcement agencies and urban planners. We found that the Universal Kriging modeling performs better with our model since ??. 
+In conclusion, our study demonstrates a comparative analysis of Bayesian Kriging and Universal Kriging models for crime prediction, revealing the strengths and limiations of each approach. We found that the Universal Kriging model outperformed the Bayesian Kringing model in our study using leave on out cross validation, although the exact reason for this performance difference requires further invesetigation.
 
-One key limitation of our study is the assumption of stationary in the spatial processes. The assumption of mean, variance and autocorrelation structure do not change over time is not always true for the real world scenarios. Additionally, the choice of priors and hyperparameters may influence the model's performance and generalization ability.
+One significant limitation of our study is the assumption of stationary in spatial processes. Real-word scenarios often exhibit non-stationary behavoiur, where mean, variance, and autocorrelation structures may vary over time or space. Additionally, the choice of priors and hyperparameters can influence model performance and generalization ability. Exploring alternative Kringing models such as ordinary Kringing, or optimizing model parameters could potentially yield improved results. 
 
-The importance of accounting for uncertainties in spatial modeling, showcasing the relevance of Bayesian methods in such applications.
+Our study holds significance as it bridges the gap between theoretical modeling techniques and practical applications in crime prediction, offering insights into the effectiveness of Bayesian and Universal Kriging models. Our findings underscore the importance of robust spatial modeling approaches in addressing complex real-world challenges, emphasizing the need for informed decision-making in crime management and urban development initiatives.
 
 ## Appendix A
 * implementation code in the appendix (using Stan)
