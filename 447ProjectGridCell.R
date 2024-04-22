@@ -29,8 +29,6 @@ train_indices <- sample(nrow(crime_data), size = 0.8 * nrow(crime_data))
 train_data <- crime_data[train_indices, ]
 test_data <- crime_data[-train_indices, ]
 
-
-
 #fit = stan(file = 'geo_model.stan', 
 #               data = list(N = nrow(train_data),
 #                           x = train_data$X_Coord,
