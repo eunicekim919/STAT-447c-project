@@ -108,7 +108,12 @@ The results from the 'loo' function provide estimates for the expected log predi
 We built two different Kriging models with Stan for both Model 1 and Model 2 to compare results: one using the original data (standard model) and another using the logarithmic transformation (log model). To determine which model have better predictive performance, we employed the 'loo_compare' function to evaluate the fit of the models.The decision between the standard model and the log model allows us to find the suitable model to compare two Kriging models. 
 
 ![Bayesian Kriging LOO-CV Standard Model](bayesloo-output.png)
+*Figure 1. Leave-One-Out Cross Validation Scores for Log Model 2*
+
+
 ![Bayesian Kriging LOO-CV log Model](bayeslogloo-output.png)
+*Figure 2. Leave-One-Out Cross Validation Scores for Log Model 2*
+
 
 The above figures shows that the results for Standard Model 2 and Log Model 2. The Expected Log Predictive Density (ELPD) is a measure of the model's predictive performance, as it serves as a theoretically motivated metric for evaluating predictive ability (Oelrich & Villani, 2024). A higher ELPD suggest better predictive accuracy. Our standard Model 2 had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The log model using Model 2 showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
 
@@ -119,7 +124,11 @@ The LOO information criterion(LOO-IC) combines the ELPD and the effective number
 These results indicate that the log model has slightly better predictive accuracy and lower complexity compared to the standard Bayesian Kriging model. However, the two model shows a very close performance comparison in Bayesian model. 
 
 ![Universal Kriging LOO-CV Standard Model](standardloo-output.png)
+*Figure 3. Leave-One-Out Cross Validation Scores for Model 1*
+
 ![Universal Kriging LOO-CV Log Model](standardlogloo-output.png)
+*Figure 4. Leave-One-Out Cross Validation Scores for Log Model 1*
+
 
 It is clearer when we look at the results of the Universal Kriging model that the log model generally performs better than the standard model. The figures above shows the performance for each of Standard Model 1 and Log Model 1. Therefore, to further evaluate the models, we plan to compare the Universal Kriging Model and Bayesian Kriging Model using the log transformation to see which approach provides more robust predictions.
 
