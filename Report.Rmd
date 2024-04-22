@@ -99,7 +99,7 @@ Model 2 simplifies the spatial structure by directly estimating a zero-mean mult
 
 ### Prior Justification
 
-In both models, the parameters are given the same priors for their equivalent variables to compare the nature of the models rather than the parameters themselves. An inverse gamma prior for `rho` was selected since we expect a level of spatial continuity, and the longer tail was to accommodate the possibility of significant spatial dependence, as the Global Moran’s Index on this data showed high autocorrelation. The normal priors for `sigma` and `sigma_err` assume most variability near the mean, reflecting the uncertainty we had about our assumption. The broad normal prior `alpha` in Model 1 was to accommodate different baseline densities. While there is a distinct lack of use of kriging in other research related to the spatial interpolation of similar crime data, these priors are common choices in other fields when conducting kriging. (Wiskotten et al. 2023;)
+In both models, the parameters are given the same priors for their equivalent variables to compare the nature of the models rather than the parameters themselves. An inverse gamma prior for `rho` was selected since we expect a level of spatial continuity, and the longer tail was to accommodate the possibility of significant spatial dependence, as the Global Moran’s Index on this data showed high autocorrelation. The normal priors for `sigma` and `sigma_err` assume most variability near the mean, reflecting the uncertainty we had about our assumption. The broad normal prior `alpha` in Model 1 was to accommodate different baseline densities. While there is a distinct lack of use of kriging in other research related to the spatial interpolation of similar crime data, these priors (notably using normal priors for both sigma & sigma noise) are common choices in other fields when conducting kriging, and provided better results when tested. (Wiskotten et al., 2023; Brown & Brubaker, 2012; Watson, 2018)
 
 ## Results
 
@@ -129,9 +129,10 @@ The Bayesian Kriging log model produced a LOO-IC of 6057.7 with a standard error
 
 ## Conclusion
 
-In conclusion, our study demonstrates a comparative analysis of Bayesian Kriging and Universal Kriging models for crime prediction, revealing the strengths and limiations of each approach. We found that the Universal Kriging model outperformed the Bayesian Kringing model in our study using leave on out cross validation, although the exact reason for this performance difference requires further investigation.
+In conclusion, our study demonstrates a comparative analysis of two different Kriging models for crime density prediction in the city of Vancouver, revealing the predictive capabilities of each approach. We found that the our first model which most closely represents Universal Kriging outperformed our second Kriging model which most closely represents a standard Bayesian kriging model in our study based on the metrics found in leave on out cross validation, although the exact reason for this performance difference requires further investigation.
 
-One significant limitation of our study is the assumption of stationary in spatial processes. Real-word scenarios often exhibit non-stationary behavoiur, where mean, variance, and autocorrelation structures may vary over time or space. Additionally, the choice of priors and hyperparameters can influence model performance and generalization ability. Exploring alternative Kringing models such as ordinary Kringing, or optimizing model parameters could potentially yield improved results. 
+One significant limitation of our study is the assumption of stationary in spatial processes. Real-word scenarios often exhibit non-stationary behavior, where mean, variance, and autocorrelation structures may vary over time or space. Additionally, the choice of priors and hyperparameters can influence model performance and generalization ability. Exploring alternative Kriging models such as ordinary Kriging, or optimizing model parameters could potentially yield improved results. Another potential limitation was the lack of other variables considered in our analysis. Mentioned previously, no temporal input was included into our interpolation models based on the preliminary analysis that showed crime density was relatively even in each month. Future research could include other factors such as reported time of day or even aspatial and non-temporal factors such as type of crime could have created a better informed hierarchical model, however were omitted due to its complexity in novel spatial interpolation analysis. It is also important to consider that the data were are using is sourced solely from crime reports, which have been known to contain biases based on location and other factors and may not fully represent crime occurrences. (Westin, 2021) 
+
 
 Our study holds significance as it bridges the gap between theoretical modeling techniques and practical applications in crime prediction, offering insights into the effectiveness of Bayesian and Universal Kriging models. Our findings underscore the importance of robust spatial modeling approaches in addressing complex real-world challenges, emphasizing the need for informed decision-making in crime management and urban development initiatives.
 
@@ -139,6 +140,13 @@ Our study holds significance as it bridges the gap between theoretical modeling 
 * implementation code in the appendix (using Stan)
 
 ## References
+
+Andresen, M.A. (2006), A spatial analysis of crime in Vancouver, British Columbia: a synthesis of social disorganization and routine activity theory. The Canadian Geographer / Le Géographe canadien, 50: 487-502. https://doi.org/10.1111/j.1541-0064.2006.00159.x
+
+Brown, E., & Brubaker, M. (2012). Kriging model. Stan Users Group Discussion - Kriging Model JAGS. https://groups.google.com/g/stan-users/c/PNRoDMQvzrs 
+
+Government Of Canada, S. C. (2023). Table 4 police-reported crime severity index and crime rate, by census metropolitan area, 2022 . Police-reported Crime Severity Index and crime rate, by census metropolitan area, 2022. https://www150.statcan.gc.ca/n1/daily-quotidien/230727/t004b-eng.htm
+
 Kheiri, S., Kimber, A., & Reza Meshkani, M. (2007). Bayesian analysis of an inverse gaussian correlated frailty model. Computational Statistics &amp; Data Analysis, 51(11), 5317–5326. https://doi.org/10.1016/j.csda.2006.09.026
 
 Mooney, S. J., Bader, M. D., Lovasi, G. S., Neckerman, K. M., Rundle, A. G., & Teitler, J. O. (2018). Using universal kriging to improve neighborhood physical disorder measurement. Sociological Methods &amp; Research, 49(4), 1163–1185. https://doi.org/10.1177/0049124118769103
@@ -147,6 +155,12 @@ Oelrich, O., & Villani, M. (2024, February 3). Modeling local predictive ability
 
 Sam, W. (2018, July 13). Geostatistical modelling with R and Stan. The Academic Health Economists’ Blog. https://aheblog.com/2016/12/07/geostatistical-modelling-with-r-and-stan/
 
+Vancouver Police Department (VPD) crime data. (2024). Vancouver Police Department (VPD) crime data. geoDASH Open Data. https://geodash.vpd.ca/opendata/
+
+Watson, S. (2018, July 13). Geostatistical modelling with R and Stan. The Academic Health Economists’ Blog. https://aheblog.com/2016/12/07/geostatistical-modelling-with-r-and-stan/ 
+
 Wieskotten, M., Crozet, M., Iooss, B., Lacaux, C., & Marrel, A. (2023). A comparison between Bayesian and ordinary Kriging based on validation criteria: Application to radiological characterisation. Mathematical Geosciences, 56(1), 143–168. https://doi.org/10.1007/s11004-023-10072-y
+
+Westin, M. (2023). Reported crime statistics in Toronto can be misleading. Reported Crime Statistics in Toronto can be Misleading. https://tellingstorieswithdata.com/inputs/pdfs/paper_one-2021-Morgaine_Westin.pdf 
 
 Zhang, Z., & Du, Q. (2019). A Bayesian Kriging regression method to estimate air temperature using remote sensing data. Remote Sensing, 11(7), 767. https://doi.org/10.3390/rs11070767 
