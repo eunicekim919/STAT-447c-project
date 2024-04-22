@@ -152,7 +152,6 @@ LOO-CV Model Adaptations: Youjung
 Log Model Adaptations: Youjung
 Model Fitting: Zela
 Results Interpretation: Zela(rmse, plots), Youjung(loo)
-Writing project paper
 Intro/background/results: Youjung
 Methodology/Exploration: Zela
 Conclusion:Zela, Youjung
