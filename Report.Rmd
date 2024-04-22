@@ -129,7 +129,7 @@ The Bayesian Kriging log model produced a LOO-IC of 6057.7 with a standard error
 
 ## Conclusion
 
-In conclusion, our study demonstrates a comparative analysis of Bayesian Kriging and Universal Kriging models for crime prediction, revealing the strengths and limiations of each approach. We found that the Universal Kriging model outperformed the Bayesian Kringing model in our study using leave on out cross validation, although the exact reason for this performance difference requires further invesetigation.
+In conclusion, our study demonstrates a comparative analysis of Bayesian Kriging and Universal Kriging models for crime prediction, revealing the strengths and limiations of each approach. We found that the Universal Kriging model outperformed the Bayesian Kringing model in our study using leave on out cross validation, although the exact reason for this performance difference requires further investigation.
 
 One significant limitation of our study is the assumption of stationary in spatial processes. Real-word scenarios often exhibit non-stationary behavoiur, where mean, variance, and autocorrelation structures may vary over time or space. Additionally, the choice of priors and hyperparameters can influence model performance and generalization ability. Exploring alternative Kringing models such as ordinary Kringing, or optimizing model parameters could potentially yield improved results. 
 
