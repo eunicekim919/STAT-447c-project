@@ -9,16 +9,18 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Working link to a public repo:
+## Repository Link:
 https://github.com/eunicekim919/STAT-447c-project.git
 
-## Introduction (Problem formulation)
+## Introduction
 In recent years, densely populated regions worldwide have experienced fluctuating crime rates due to various economic and environmental factors such as income, job availability, and climate. Historically, Vancouver has consistently had higher than expected about its population size and the average Canadian crime rate, including higher rates of violent crime. (Andresen, 2017; Statistics Canada, 2023) These rising crime rates prompt concerns about public safety, and how to appropriately allocate resources to adequately deal with issues unique to each area. Effective spatial analysis of crime data is crucial for understanding these patterns, predicting future occurrences, and implementing the right preventative measures. When reports are only available for certain regions, being able to interpolate available data spatially could provide important information without needing to expend unnecessary resources. Among the various statistical techniques, kriging offers a robust method of spatial interpolation using Bayesian optimization over a Gaussian process.
 
 This study aims to analyze and compare different kriging models for interpolating crime density in Vancouver using reported crime data from the Vancouver Police Department GeoDASH Open Data, a source that provides aggregate crime data from the crime reports made in the City of Vancouver in 2022. (Vancouver Police Department, 2024). Both Stan and R are used to implement and assess the model, with the performance evaluated through Leave-One-Out Cross-Validation (LOO-CV). This technique assesses the model's predictive performance by leaving one observation out at a time and predicting its value using the rest of the data. Determining the most appropriate kriging model for this type of data & analysis has the potential to contribute to the greater field of geospatial crime analysis as a whole, informing policy decisions and strategic planning for crime reporting and urban safety management. Exploring a variety of kriging approaches, this paper also provides a better understanding of the advantages and disadvantages of the various kriging models. 
 Kriging & Bayesian Foundations
 
-  Kriging is the overarching term for a group of geostatistical techniques used for spatial interpolation, which estimate the values at unknown points based on the values of known points based on the values of the known points nearby - based on applications of Tobler’s first law. The foundation of kriging lies in its ability to model spatial autocorrelation through a semivariogram, a function that quantifies the strength of statistical correlation as a function of distance. This works by assuming that the distance between sample points reflects a quantifiable spatial correlation, that can then be used to interpolate values at unsampled locations. Kriging functions as a kind of Bayesian linear estimator, it works by incorporating some prior knowledge about the spatial processes, and then updating with the observed data to make predictions - the unknown values considered as random variables.
+## Background
+
+Kriging is the overarching term for a group of geostatistical techniques used for spatial interpolation, which estimate the values at unknown points based on the values of known points based on the values of the known points nearby - based on applications of Tobler’s first law. The foundation of kriging lies in its ability to model spatial autocorrelation through a semivariogram, a function that quantifies the strength of statistical correlation as a function of distance. This works by assuming that the distance between sample points reflects a quantifiable spatial correlation, that can then be used to interpolate values at unsampled locations. Kriging functions as a kind of Bayesian linear estimator, it works by incorporating some prior knowledge about the spatial processes, and then updating with the observed data to make predictions - the unknown values considered as random variables.
 
 ### Mathematical Explanation of Kriging
   Kriging leverages the spatial covariance among data points to make predictions at unsampled locations.
@@ -28,34 +30,52 @@ The key to kriging is the assumption that the spatial process underlying the obs
 The observed data $\mathbf{Z}$ are modeled as a realization of a Gaussian process:
 $$Z(\mathbf{s}) = \mu(\mathbf{s}) + \epsilon(\mathbf{s})$$
 where:
+
 - $\mathbf{s}$ denotes a spatial location.
+
 - $\mu(\mathbf{s})$ is the mean function, often assumed to be constant $\alpha$ across the space.
+
 - $\epsilon(\mathbf{s})$ represents the spatially correlated random error, assumed to follow a multivariate normal distribution.
-The core of a kriging model lies in its specification of the spatial covariance. A common choice is the exponential covariance function:
+
+The core of a kriging model lies in its specification of the spatial covariance.
+A common choice is the exponential covariance function:
+
 $$cov(Z(\mathbf{s}_i), Z(\mathbf{s}_j)) = \sigma^2 \exp\left(-\frac{\|\mathbf{s}_i - \mathbf{s}_j\|}{\rho}\right)$$
 where:
+
 - $\mathbf{s}_i - \mathbf{s}_j$ is the Euclidean distance between locations $\mathbf{s}_i$ and $\mathbf{s}_j$.
+
 - $\sigma^2$ is the process variance.
+
 - $\rho$ is the range parameter, influencing how quickly correlations decay with distance.
 
 The prediction of $Z(\mathbf{s}_0)$ at a new location $\mathbf{s}_0$ using observed data $\mathbf{Z}$ at known locations $\mathbf{s}_1, \ldots, \mathbf{s}_N$ is given by:
+
 $$\hat{Z}(\mathbf{s}_0) = \mu + \mathbf{k}^T \mathbf{K}^{-1} (\mathbf{Z} - \mu \mathbf{1})$$
 where:
+
 - $\mu$ is the assumed mean of the process.
+
 - $\mathbf{Z}$ is the vector of observed values at the known locations.
+
 - $\mathbf{k}$ is the vector of covariances between the new location \(\mathbf{s}_0\) and each of the known locations.
+
 - $\mathbf{K}$ is the covariance matrix among the observed data points.
+
 - $\mathbf{1}$ is a vector of ones (assuming a constant mean).
 
 The components of $\mathbf{k}$ and $\mathbf{K}$ are computed using some covariance function:
+
 $$\mathbf{k}[i] = \sigma^2 \exp\left(-\frac{\|\mathbf{s}_0 - \mathbf{s}_i\|}{\rho}\right)$$
 
 $$\mathbf{K}[i,j] = \sigma^2 \exp\left(-\frac{\|\mathbf{s}_i - \mathbf{s}_j\|}{\rho}\right) + \sigma_{\text{err}}^2 \delta_{ij}$$
 with $\delta_{ij}$ being the Kronecker delta, which is 1 if \(i = j\) and 0 otherwise, equivalent to the identity matrix in practice.
 
 Finally, the model can also incorporate measurement error $\sigma_{\text{err}}^2$, which adds to the diagonal elements of the covariance matrix $\mathbf{K}$, representing error variance that is independent at each observed location.
-Other Spatial Interpolation Methods
-	Kriging is one of the most sophisticated geostatistical models, but others serve similar tasks - such as inverse distance weighting which computes the weighted average of nearby observed values or splines, which fit some smooth mathematical function that passes through the data points. However, kriging is often better for more complex given its semivariogram and allowing measures of uncertainty for those estimates. 
+
+### Other Spatial Interpolation Methods
+
+Kriging is one of the most sophisticated geostatistical models, but others serve similar tasks - such as inverse distance weighting which computes the weighted average of nearby observed values or splines, which fit some smooth mathematical function that passes through the data points. However, kriging is often better for more complex given its semivariogram and allowing measures of uncertainty for those estimates. 
 	
 ### Types of Kriging
 
@@ -68,7 +88,7 @@ While Wiskotten et al.'s study focuses on radiological characterization in decom
 
 ## INITIAL EXPLORATION
 
-### Pre-processing
+### Pre-Processing
 
 Upon first analysis of the raw data imported from the Vancouver Police Department, the size and shape of the data made it difficult to work with. Many attempts were made to clean and work with the data as is, but to present an informative and meaningful analysis, we decided instead to alter the data so rather than being a set of points where each point represents one single crime reported, it is a map of equally spaced grid cells that contains a count of how many crimes occured. This was done using ArcGIS Pro, by creating a “fishnet” the size of vancouver with 500m x 500m grid cells and summarizing the number of crimes, then adding in the centre longitude (x-coord) and latitude (y-coord) for each grid, then exporting it as a CSV file. 
 
@@ -91,7 +111,7 @@ Model 1 leverages an ordinary kriging framework, characterized by the four param
 `rho` defines the range parameter or length scale, which influences how quickly the correlation would decay with distance, with the prior  $\rho \sim InvGamma(2,1)$
 `sigma` is the spatial variance, controlling the expected variability related to its spatial factors with the prior $\sigma \sim Normal(0,1)$
 `sigma_err` accounts for the random noise that may occur in the dataset, with the prior $\sigma_{err} \sim Normal(0,1)$
-The spatial structure is modelled using a Gaussian process with the covariance between any two points `i` and `j` are given by  $dist_{ij} =  \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}$, the Euclidean distance matrix computed from longitude and latitude data. The crimes are then assumed to follow a multivariate normal distribution $crimes \sim Multi-Normal(\mu, \sum)$, where $\sum = \sigma exp(\frac{-dist}{\rho}) + \sigma_{err}I$ and $\mu[i] = \alpha$, since we assume constant mean.
+The spatial structure is modeled using a Gaussian process with the covariance between any two points `i` and `j` are given by  $dist_{ij} =  \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}$, the Euclidean distance matrix computed from longitude and latitude data. The crimes are then assumed to follow a multivariate normal distribution $crimes \sim Multi-Normal(\mu, \sum)$, where $\sum = \sigma exp(\frac{-dist}{\rho}) + \sigma_{err}I$ and $\mu[i] = \alpha$, since we assume constant mean.
 
 Model 2 simplifies the spatial structure by directly estimating a zero-mean multivariate normal distribution of the crime counts - it similarly uses a covariance matrix for the Gaussian function of distance, but utilizes a Chloseky decomposition for computational efficiency. 
 
@@ -105,12 +125,10 @@ The results from the 'loo' function provide estimates for the expected log predi
 
 We built two different Kriging models with Stan for both Model 1 and Model 2 to compare results: one using the original data (standard model) and another using the logarithmic transformation (log model). To determine which model have better predictive performance, we employed the 'loo_compare' function to evaluate the fit of the models.The decision between the standard model and the log model allows us to find the suitable model to compare two Kriging models. 
 
-![Bayesian Kriging LOO-CV Standard Model](bayesloo-output.png)
-*Figure 1. Leave-One-Out Cross Validation Scores for Log Model 2*
+![Leave-One-Out Cross Validation Scores for Log Model 2](bayesloo-output.png)
 
 
-![Bayesian Kriging LOO-CV log Model](bayeslogloo-output.png)
-*Figure 2. Leave-One-Out Cross Validation Scores for Log Model 2*
+![Leave-One-Out Cross Validation Scores for Log Model 2](bayeslogloo-output.png)
 
 
 The above figures shows that the results for Standard Model 2 and Log Model 2. The Expected Log Predictive Density (ELPD) is a measure of the model's predictive performance, as it serves as a theoretically motivated metric for evaluating predictive ability (Oelrich & Villani, 2024). A higher ELPD suggest better predictive accuracy. Our standard Model 2 had an ELPD estimate of -3039.1 with a standard error of 566.8, indicating some variability in the predictions. The log model using Model 2 showed a slightly better ELPD of -3028.9 with a standard error of 565.3, suggesting improved predictive performance. 
@@ -121,16 +139,15 @@ The LOO information criterion(LOO-IC) combines the ELPD and the effective number
 
 These results indicate that the log model has slightly better predictive accuracy and lower complexity compared to the standard Bayesian Kriging model. However, the two model shows a very close performance comparison in Bayesian model. 
 
-![Universal Kriging LOO-CV Standard Model](standardloo-output.png)
-*Figure 3. Leave-One-Out Cross Validation Scores for Model 1*
+![Leave-One-Out Cross Validation Scores for Model 1](standardloo-output.png)
 
-![Universal Kriging LOO-CV Log Model](standardlogloo-output.png)
-*Figure 4. Leave-One-Out Cross Validation Scores for Log Model 1*
+
+![Leave-One-Out Cross Validation Scores for Log Model 1](standardlogloo-output.png)
 
 
 It is clearer when we look at the results of the Universal Kriging model that the log model generally performs better than the standard model. The figures above shows the performance for each of Standard Model 1 and Log Model 1. Therefore, to further evaluate the models, we plan to compare the Universal Kriging Model and Bayesian Kriging Model using the log transformation to see which approach provides more robust predictions.
 
-As the figures above indicates, our Model 2(from now I am assuming that models are log models) has an ELPD estimate of -3028.9 with a standard error of 565.3, indicating some variability in the predictions. The Model 1 has an lower ELPD estimate of -427.1 with a smaller standard error of 31.3. This indicates that the Model 1 may have better predictive performance compared to Model 2, as it shows a higher ELPD estimate and a lower standard error, signifying potentially more reliable predictions with less variability.
+As the figures above indicates, our Model 2 (note that these are now referring to the log models) has an ELPD estimate of -3028.9 with a standard error of 565.3, indicating some variability in the predictions. The Model 1 has an lower ELPD estimate of -427.1 with a smaller standard error of 31.3. This indicates that the Model 1 may have better predictive performance compared to Model 2, as it shows a higher ELPD estimate and a lower standard error, signifying potentially more reliable predictions with less variability.
 
 The Model 2 had an effective number of parameters was 372.9 with a standard error of 111.9. The Model 1 had a lower effective number of parameters at 204.0 with a standard error of 25.4. It indicates that the Model 1 is less complex and potentially less prone to overfitting.
 
@@ -146,14 +163,23 @@ Our study holds significance as it bridges the gap between theoretical modeling 
 
 ## Contributions of each team member:
 Choice Data/Data preprocessing: Zela, Youjung
+
 Universal Kriging Model: Zela
+
 Bayesian Kriging model: Zela
+
 LOO-CV Model Adaptations: Youjung
+
 Log Model Adaptations: Youjung
+
 Model Fitting: Zela
+
 Results Interpretation: Zela(rmse, plots), Youjung(loo)
+
 Intro/background/results: Youjung
+
 Methodology/Exploration: Zela
+
 Conclusion:Zela, Youjung
 
 ## Appendix A
